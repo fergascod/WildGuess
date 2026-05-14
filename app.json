@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Ocean ID",
+    "slug": "ocean-id",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "oceanid",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.oceanid.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Ocean ID uses your location to suggest species observed near you."
+      }
+    },
+    "android": {
+      "package": "com.oceanid.app",
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-location"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
