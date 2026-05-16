@@ -1,5 +1,5 @@
 {
-  "name": "ocean-id",
+  "name": "wild-guess",
   "version": "0.1.0",
   "private": true,
   "main": "expo-router/entry",
@@ -43,6 +43,9 @@
     "typescript": "~5.9.3"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["sharp", "unrs-resolver"]
+    "onlyBuiltDependencies": [
+      "sharp",
+      "unrs-resolver"
+    ]
   }
 }
