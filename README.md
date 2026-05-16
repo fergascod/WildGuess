@@ -3,7 +3,7 @@
 This project is a React application where a user can interact with [iNaturalist's API](https://api.inaturalist.org/v1/docs/)
 to browse the taxonomy of all species that the citizen science portal has information on. It also offers the possibility to take a quizz on the different species within a taxonomic group to hone your visual ID skills!
 
-Check it out: [https://minka-id.vercel.app/](https://minka-id.vercel.app/)
+Check it out: [https://wild-guess-game.vercel.app/](https://wild-guess-game.vercel.app/)
 
 ## Getting Started
 
