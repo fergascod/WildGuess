@@ -44,7 +44,11 @@ function useDelayRequest<T extends (...args: any[]) => void>(
     ) as T;
 }
 
-export default function SpeciesSearchScreen() {
+export default function SpeciesSearchScreen({
+    onSelect,
+}: {
+    onSelect: (species: Taxon[]) => void;
+}) {
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<Taxon[]>([]);
     const [loading, setLoading] = useState(false);
@@ -88,13 +92,17 @@ export default function SpeciesSearchScreen() {
     };
 
     const handleSelect = (taxon: Taxon) => {
-        setSelected((prev) =>
-            prev.some((t) => t.id === taxon.id)
-                ? prev
-                : [...prev, taxon]
-        );
-    };
+        setSelected((prev) => {
+            const next =
+                prev.some((t) => t.id === taxon.id)
+                    ? prev
+                    : [...prev, taxon];
 
+            onSelect(next);
+
+            return next;
+        });
+    };
     const renderItem = ({ item }: { item: Taxon }) => (
         <TouchableOpacity
             style={styles.resultCard}
@@ -143,11 +151,13 @@ export default function SpeciesSearchScreen() {
             key={taxon.id}
             style={styles.selectedCard}
             activeOpacity={0.8}
-            onPress={() =>
-                setSelected((prev) =>
-                    prev.filter((t) => t.id !== taxon.id)
-                )
-            }
+            onPress={() => {
+                setSelected((prev) => {
+                    const next = prev.filter((t) => t.id !== taxon.id);
+                    onSelect(next);
+                    return next;
+                });
+            }}
         >
             {taxon.default_photo?.square_url ? (
                 <Image
