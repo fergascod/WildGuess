@@ -2,10 +2,14 @@ import { Link, usePathname } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, navbarHeight, spacing } from '@/theme/theme';
+import { supabase } from '@/lib/supabase';
 
-type NavItem = { label: string; href: '/' | '/explore' | '/new_test' };
+import { useAuthContext } from '@/hooks/use-auth-context'
 
-const ITEMS: NavItem[] = [
+type NavItem = { label: string; href: '/' | '/explore' | '/new_test' | '/profile' | '/login' };
+
+
+const ITEMS_BASE: NavItem[] = [
   { label: 'Inici', href: '/' },
   { label: 'Explora', href: '/explore' },
   { label: 'Test', href: '/new_test' },
@@ -17,7 +21,17 @@ function isActive(pathname: string, href: string) {
 }
 
 export default function Navbar() {
+  supabase.auth.getSession().then(console.log)
   const pathname = usePathname();
+  const { profile } = useAuthContext()
+
+  let ITEMS = ITEMS_BASE.slice()
+  if (profile) {
+    ITEMS.push({ label: 'Perfil', href: '/profile' })
+  } else {
+    ITEMS.push({ label: 'Login', href: '/login' })
+  }
+
 
   return (
     <View style={styles.nav}>

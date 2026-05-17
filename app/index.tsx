@@ -3,7 +3,12 @@ import { Linking, StyleSheet, Text, View } from 'react-native';
 import { Button, Screen } from '@/components/ui';
 import { colors, fonts, spacing } from '@/theme/theme';
 
+import { useAuthContext } from '@/hooks/use-auth-context'
+
 export default function Home() {
+  const { profile } = useAuthContext()
+  console.log('User profile:', profile) // Log the profile data for debugging
+
   return (
     <Screen contentStyle={styles.content}>
       <View style={styles.hero}>
@@ -24,6 +29,15 @@ export default function Home() {
           href="/new_test"
         />
       </View>
+
+
+      {/* <View style={styles.stepContainer}>
+        <Text>Username</Text>
+        <Text>{profile?.username}</Text>
+        <Text>Full name</Text>
+        <Text>{profile?.full_name}</Text>
+      </View>
+      <SignOutButton /> */}
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>Desenvolupat per Fernando Gastón</Text>

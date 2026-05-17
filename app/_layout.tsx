@@ -5,8 +5,10 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import Navbar from '@/components/Navbar';
 import { colors } from '@/theme/theme';
+import AuthProvider from '@/providers/auth-provider'
+import { SplashScreenController } from '@/components/splash-screen-controller'
 
-export default function RootLayout() {
+function RootNavigator() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
@@ -18,6 +20,16 @@ export default function RootLayout() {
       </SafeAreaView>
     </SafeAreaProvider>
   );
+}
+
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <SplashScreenController />
+      <RootNavigator />
+      <StatusBar style="auto" />
+    </AuthProvider>
+  )
 }
 
 const styles = StyleSheet.create({
