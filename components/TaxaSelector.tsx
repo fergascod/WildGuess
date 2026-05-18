@@ -13,7 +13,7 @@ import {
 
 import { cardShadow, colors, fonts, radius, spacing } from "@/theme/theme";
 
-interface Taxon {
+export interface Taxon {
     id: number;
     name: string;
     preferred_common_name?: string;
@@ -37,7 +37,6 @@ function useDelayRequest<T extends (...args: any[]) => void>(
     return useCallback(
         (...args: Parameters<T>) => {
             if (timer.current) clearTimeout(timer.current);
-
             timer.current = setTimeout(() => fn(...args), delay);
         },
         [fn, delay]
@@ -67,15 +66,10 @@ export default function SpeciesSearchScreen({
                 `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(
                     text
                 )}&locale=cat&rank=species`,
-                {
-                    headers: {
-                        Accept: "application/json",
-                    },
-                }
+                { headers: { Accept: "application/json" } }
             );
 
             const data: AutocompleteResult = await res.json();
-
             setResults(data.results ?? []);
         } catch {
             setResults([]);
@@ -93,71 +87,75 @@ export default function SpeciesSearchScreen({
 
     const handleSelect = (taxon: Taxon) => {
         setSelected((prev) => {
-            const next =
-                prev.some((t) => t.id === taxon.id)
-                    ? prev
-                    : [...prev, taxon];
-
+            const next = prev.some((t) => t.id === taxon.id)
+                ? prev
+                : [...prev, taxon];
             onSelect(next);
-
             return next;
         });
     };
-    const renderItem = ({ item }: { item: Taxon }) => (
-        <TouchableOpacity
-            style={styles.resultCard}
-            activeOpacity={0.8}
-            onPress={() => handleSelect(item)}
-        >
-            {item.default_photo?.square_url ? (
-                <Image
-                    source={{ uri: item.default_photo.square_url }}
-                    style={styles.resultImage}
-                />
-            ) : (
-                <View style={[styles.resultImage, styles.placeholderImage]}>
-                    <Text style={styles.placeholderText}>?</Text>
-                </View>
-            )}
 
-            <View style={styles.resultContent}>
-                <Text style={styles.resultTitle}>
-                    {item.matched_term}
-                </Text>
+    const handleDeselect = (taxon: Taxon) => {
+        setSelected((prev) => {
+            const next = prev.filter((t) => t.id !== taxon.id);
+            onSelect(next);
+            return next;
+        });
+    };
 
-                {item.preferred_common_name && (
-                    <Text style={styles.resultSubtitle}>
-                        {item.preferred_common_name}
-                    </Text>
+    const renderItem = ({ item }: { item: Taxon }) => {
+        const isSelected = selected.some((t) => t.id === item.id);
+
+        return (
+            <TouchableOpacity
+                style={[styles.resultCard, isSelected && styles.resultCardSelected]}
+                activeOpacity={0.8}
+                onPress={() => isSelected ? handleDeselect(item) : handleSelect(item)}
+            >
+                {item.default_photo?.square_url ? (
+                    <Image
+                        source={{ uri: item.default_photo.square_url }}
+                        style={styles.resultImage}
+                    />
+                ) : (
+                    <View style={[styles.resultImage, styles.placeholderImage]}>
+                        <Text style={styles.placeholderText}>?</Text>
+                    </View>
                 )}
 
-                <View style={styles.metaRow}>
-                    <Text style={styles.metaText}>
-                        {item.rank}
-                    </Text>
+                <View style={styles.resultContent}>
+                    <Text style={styles.resultTitle}>{item.matched_term}</Text>
 
-                    <Text style={styles.metaDot}>•</Text>
+                    {item.preferred_common_name && (
+                        <Text style={styles.resultSubtitle}>
+                            {item.preferred_common_name}
+                        </Text>
+                    )}
 
-                    <Text style={styles.metaText}>
-                        {item.observations_count.toLocaleString()} obs.
-                    </Text>
+                    <View style={styles.metaRow}>
+                        <Text style={styles.metaText}>{item.rank}</Text>
+                        <Text style={styles.metaDot}>•</Text>
+                        <Text style={styles.metaText}>
+                            {item.observations_count.toLocaleString()} obs.
+                        </Text>
+                    </View>
                 </View>
-            </View>
-        </TouchableOpacity>
-    );
+
+                {isSelected && (
+                    <View style={styles.checkBadge}>
+                        <Text style={styles.checkText}>✓</Text>
+                    </View>
+                )}
+            </TouchableOpacity>
+        );
+    };
 
     const renderSelection = (taxon: Taxon) => (
         <TouchableOpacity
             key={taxon.id}
             style={styles.selectedCard}
             activeOpacity={0.8}
-            onPress={() => {
-                setSelected((prev) => {
-                    const next = prev.filter((t) => t.id !== taxon.id);
-                    onSelect(next);
-                    return next;
-                });
-            }}
+            onPress={() => handleDeselect(taxon)}
         >
             {taxon.default_photo?.square_url ? (
                 <Image
@@ -170,17 +168,19 @@ export default function SpeciesSearchScreen({
                 </View>
             )}
 
-            <Text
-                numberOfLines={1}
-                style={styles.selectedText}
-            >
+            <Text numberOfLines={1} style={styles.selectedText}>
                 {taxon.matched_term}
             </Text>
+
+            <View style={styles.removeBadge}>
+                <Text style={styles.removeText}>×</Text>
+            </View>
         </TouchableOpacity>
     );
 
     return (
-        <View style={styles.page}>
+        <View style={styles.wrapper}>
+            {/* Selected species strip */}
             {selected.length > 0 && (
                 <View style={styles.selectionSection}>
                     <Text style={styles.selectionTitle}>
@@ -197,70 +197,64 @@ export default function SpeciesSearchScreen({
                     </ScrollView>
                 </View>
             )}
-            <View style={styles.container}>
-                <View style={styles.headerCard}>
 
-                    <Text style={styles.subtitle}>
-                        Cerca i selecciona espècies de iNaturalist
-                    </Text>
+            {/* Search card */}
+            <View style={styles.searchCard}>
+                <Text style={styles.subtitle}>
+                    Cerca i selecciona espècies de iNaturalist
+                </Text>
 
-                    <TextInput
-                        value={query}
-                        onChangeText={handleChangeText}
-                        placeholder="Escriu el nom d'una espècie..."
-                        placeholderTextColor={colors.muted}
-                        returnKeyType="search"
-                        autoCorrect={false}
-                        autoCapitalize="none"
-                        style={styles.input}
-                    />
-                </View>
+                <TextInput
+                    value={query}
+                    onChangeText={handleChangeText}
+                    placeholder="Escriu el nom d'una espècie..."
+                    placeholderTextColor={colors.muted}
+                    returnKeyType="search"
+                    autoCorrect={false}
+                    autoCapitalize="none"
+                    style={styles.input}
+                />
 
-                <View style={styles.resultsCard}>
-                    {loading ? (
-                        <View style={styles.loadingContainer}>
-                            <ActivityIndicator color={colors.accent} />
-                        </View>
-                    ) : (
-                        <FlatList
-                            data={results}
-                            keyExtractor={(item) => String(item.id)}
-                            renderItem={renderItem}
-                            keyboardShouldPersistTaps="handled"
-                            contentContainerStyle={
-                                results.length === 0
-                                    ? styles.emptyContainer
-                                    : styles.resultsList
-                            }
-                            ListEmptyComponent={
-                                <Text style={styles.emptyText}>
-                                    Cap resultat
-                                </Text>
-                            }
-                        />
-                    )}
-                </View>
+                {/* Results — fixed height, scrollable */}
+                {(loading || query.trim().length > 0) && (
+                    <View style={styles.resultsContainer}>
+                        {loading ? (
+                            <View style={styles.loadingContainer}>
+                                <ActivityIndicator color={colors.accent} />
+                            </View>
+                        ) : (
+                            <FlatList
+                                data={results}
+                                keyExtractor={(item) => String(item.id)}
+                                renderItem={renderItem}
+                                keyboardShouldPersistTaps="handled"
+                                scrollEnabled={true}
+                                nestedScrollEnabled={true}
+                                contentContainerStyle={
+                                    results.length === 0
+                                        ? styles.emptyContainer
+                                        : styles.resultsList
+                                }
+                                ListEmptyComponent={
+                                    <Text style={styles.emptyText}>Cap resultat</Text>
+                                }
+                            />
+                        )}
+                    </View>
+                )}
             </View>
         </View>
     );
 }
 
+const RESULTS_MAX_HEIGHT = 320;
+
 const styles = StyleSheet.create({
-    page: {
-        flex: 1,
-        backgroundColor: colors.bg,
-    },
-
-    container: {
-        flex: 1,
-        padding: spacing.lg,
+    wrapper: {
         gap: spacing.lg,
-        maxWidth: 900,
-        width: "100%",
-        alignSelf: "center",
     },
 
-    headerCard: {
+    searchCard: {
         backgroundColor: colors.surface,
         borderRadius: radius.card,
         borderWidth: 1,
@@ -268,13 +262,6 @@ const styles = StyleSheet.create({
         padding: spacing.xl,
         gap: spacing.md,
         ...cardShadow,
-    },
-
-    title: {
-        fontFamily: fonts.display,
-        fontSize: 28,
-        fontWeight: "700",
-        color: colors.text,
     },
 
     subtitle: {
@@ -294,37 +281,35 @@ const styles = StyleSheet.create({
         color: colors.text,
     },
 
-    resultsCard: {
-        flex: 1,
-        backgroundColor: colors.surface,
-        borderRadius: radius.card,
+    // Fixed-height scrollable results box
+    resultsContainer: {
+        maxHeight: RESULTS_MAX_HEIGHT,
         borderWidth: 1,
         borderColor: colors.border,
+        borderRadius: radius.lg,
         overflow: "hidden",
-        ...cardShadow,
+        backgroundColor: colors.bg,
     },
 
     resultsList: {
-        padding: spacing.md,
+        padding: spacing.sm,
         gap: spacing.sm,
     },
 
     loadingContainer: {
-        flex: 1,
+        height: 100,
         justifyContent: "center",
         alignItems: "center",
-        minHeight: 200,
     },
 
     emptyContainer: {
-        flexGrow: 1,
+        height: 100,
         justifyContent: "center",
         alignItems: "center",
-        padding: spacing.xl,
     },
 
     emptyText: {
-        fontSize: 15,
+        fontSize: 14,
         color: colors.muted,
         fontStyle: "italic",
     },
@@ -340,9 +325,14 @@ const styles = StyleSheet.create({
         gap: spacing.md,
     },
 
+    resultCardSelected: {
+        borderColor: colors.accent,
+        backgroundColor: colors.accentLight,
+    },
+
     resultImage: {
-        width: 56,
-        height: 56,
+        width: 48,
+        height: 48,
         borderRadius: radius.md,
         backgroundColor: colors.accentLight,
     },
@@ -363,54 +353,72 @@ const styles = StyleSheet.create({
     },
 
     resultTitle: {
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: "600",
         color: colors.text,
     },
 
     resultSubtitle: {
-        fontSize: 14,
+        fontSize: 13,
         color: colors.muted,
     },
 
     metaRow: {
         flexDirection: "row",
         alignItems: "center",
-        marginTop: 4,
+        marginTop: 2,
     },
 
     metaText: {
-        fontSize: 12,
+        fontSize: 11,
         color: colors.muted,
         textTransform: "capitalize",
     },
 
     metaDot: {
-        marginHorizontal: 6,
+        marginHorizontal: 5,
         color: colors.muted,
+        fontSize: 11,
     },
 
+    checkBadge: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: colors.accent,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+
+    checkText: {
+        color: "#fff",
+        fontSize: 13,
+        fontWeight: "700",
+    },
+
+    // Selected species strip
     selectionSection: {
         gap: spacing.sm,
     },
 
     selectionTitle: {
         fontFamily: fonts.display,
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: "600",
         color: colors.text,
     },
 
     selectionScroll: {
         paddingBottom: spacing.xs,
+        gap: spacing.sm,
     },
 
     selectedCard: {
-        width: 100,
-        marginRight: spacing.md,
+        width: 88,
+        marginRight: spacing.sm,
         backgroundColor: colors.surface,
         borderWidth: 1,
-        borderColor: colors.border,
+        borderColor: colors.accent,
         borderRadius: radius.lg,
         padding: spacing.sm,
         alignItems: "center",
@@ -419,15 +427,34 @@ const styles = StyleSheet.create({
     },
 
     selectedImage: {
-        width: 72,
-        height: 72,
+        width: 60,
+        height: 60,
         borderRadius: radius.md,
         backgroundColor: colors.accentLight,
     },
 
     selectedText: {
-        fontSize: 12,
+        fontSize: 11,
         textAlign: "center",
         color: colors.text,
+    },
+
+    removeBadge: {
+        position: "absolute",
+        top: 4,
+        right: 4,
+        width: 18,
+        height: 18,
+        borderRadius: 9,
+        backgroundColor: colors.muted,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+
+    removeText: {
+        color: "#fff",
+        fontSize: 12,
+        fontWeight: "700",
+        lineHeight: 14,
     },
 });
