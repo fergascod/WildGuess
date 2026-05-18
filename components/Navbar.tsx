@@ -2,7 +2,7 @@ import { Link, usePathname } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, navbarHeight, spacing } from '@/theme/theme';
-import { supabase } from '@/lib/supabase';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 import { useAuthContext } from '@/hooks/use-auth-context'
 
@@ -21,15 +21,16 @@ function isActive(pathname: string, href: string) {
 }
 
 export default function Navbar() {
-  supabase.auth.getSession().then(console.log)
   const pathname = usePathname();
-  const { profile } = useAuthContext()
+  const { isLoggedIn } = useAuthContext()
 
-  let ITEMS = ITEMS_BASE.slice()
-  if (profile) {
-    ITEMS.push({ label: 'Perfil', href: '/profile' })
-  } else {
-    ITEMS.push({ label: 'Login', href: '/login' })
+  const ITEMS = ITEMS_BASE.slice()
+  if (isSupabaseConfigured) {
+    ITEMS.push(
+      isLoggedIn
+        ? { label: 'Perfil', href: '/profile' }
+        : { label: 'Login', href: '/login' }
+    )
   }
 
 

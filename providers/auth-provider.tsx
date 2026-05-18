@@ -1,66 +1,64 @@
 import { AuthContext } from '@/hooks/use-auth-context'
-import { supabase } from '@/lib/supabase'
+import { isSupabaseConfigured, supabase } from '@/lib/supabase'
+import type { Session, User } from '@supabase/supabase-js'
 import { PropsWithChildren, useEffect, useState } from 'react'
-import { useRouter } from 'expo-router'
 
 export default function AuthProvider({ children }: PropsWithChildren) {
-    const [claims, setClaims] = useState<Record<string, any> | undefined | null>()
-    const [profile, setProfile] = useState<any>()
-    const [isLoading, setIsLoading] = useState<boolean>(true)
-    const router = useRouter()
+    const [user, setUser] = useState<User | null | undefined>(
+        isSupabaseConfigured ? undefined : null
+    )
+    const [profile, setProfile] = useState<any>(null)
+    const [isLoading, setIsLoading] = useState<boolean>(isSupabaseConfigured)
 
     useEffect(() => {
-        // 1. Fetch the current session once on mount
-        const initAuth = async () => {
-            const { data: { user } } = await supabase.auth.getUser()
-            setClaims(user ?? null)
+        if (!isSupabaseConfigured) return
+
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setUser(session?.user ?? null)
             setIsLoading(false)
-        }
+        })
 
-        initAuth()
-
-        // 2. Single subscription — handles all auth state changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (_event, session) => {
-                setClaims(session?.user ?? null)
-
-                if (_event === 'SIGNED_OUT') {
-                    setProfile(null)
-                    router.replace('/')
-                }
+            (_event: string, session: Session | null) => {
+                setUser(session?.user ?? null)
             }
         )
 
         return () => subscription.unsubscribe()
     }, [])
 
-    // Fetch profile whenever claims change
     useEffect(() => {
-        if (claims === undefined) return // still initialising, don't run yet
+        if (user === undefined) return
 
-        const fetchProfile = async () => {
-            if (claims) {
-                const { data } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', claims.id) // user.id, not claims.sub
-                    .single()
-                setProfile(data)
-            } else {
-                setProfile(null)
-            }
+        if (!user) {
+            setProfile(null)
+            return
         }
 
-        fetchProfile()
-    }, [claims])
+        let cancelled = false
+        supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle()
+            .then(({ data, error }) => {
+                if (cancelled) return
+                if (error) console.warn('profile fetch failed', error.message)
+                setProfile(data ?? null)
+            })
+
+        return () => {
+            cancelled = true
+        }
+    }, [user])
 
     return (
         <AuthContext.Provider
             value={{
-                claims,
+                claims: user,
                 isLoading,
                 profile,
-                isLoggedIn: claims != null,
+                isLoggedIn: !!user,
             }}
         >
             {children}

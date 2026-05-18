@@ -1,4 +1,4 @@
-import { Link, Stack } from 'expo-router'
+import { Link, Stack, useRouter } from 'expo-router'
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native'
 import { supabase } from '@/lib/supabase'
 import { useForm, Controller } from 'react-hook-form'
@@ -11,6 +11,7 @@ type FormData = {
 }
 
 export default function SignupScreen() {
+    const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [authError, setAuthError] = useState<string | null>(null)
 
@@ -25,7 +26,7 @@ export default function SignupScreen() {
     async function onSubmit(data: FormData) {
         setLoading(true)
         setAuthError(null)
-        const { error } = await supabase.auth.signUp({
+        const { data: result, error } = await supabase.auth.signUp({
             email: data.email,
             password: data.password,
             options: {
@@ -33,7 +34,12 @@ export default function SignupScreen() {
             },
         })
         setLoading(false)
-        if (error) setAuthError(error.message)
+        if (error) {
+            setAuthError(error.message)
+            return
+        }
+        if (result.session) router.replace('/')
+        else setAuthError('Check your email to confirm your account.')
     }
 
     return (
