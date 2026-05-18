@@ -6,7 +6,6 @@
     "orientation": "portrait",
     "scheme": "oceanid",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.oceanid.app",
