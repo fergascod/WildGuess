@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -17,7 +17,7 @@ import { returnName } from '@/lib/utils';
 import { cardShadow, colors, fonts, radius, spacing } from '@/theme/theme';
 
 type PhotoInfo = { url: string; attribution?: string };
-type Species = { id: number; observations_count: number; [key: string]: any };
+type Species = { id: number; observations_count: number;[key: string]: any };
 
 interface QuestionState {
   url: PhotoInfo | null;
@@ -50,6 +50,17 @@ function getRandomCombination<T>(arr: T[], k: number): T[] {
 
 function first<T>(v: T | T[] | undefined): T | undefined {
   return Array.isArray(v) ? v[0] : v;
+}
+
+function parseIdList(value: string | undefined): number[] {
+  if (!value) return [];
+  const out = value
+    .split(',')
+    .map((chunk) => chunk.trim())
+    .filter((chunk) => /^\+?(0|[1-9]\d*)$/.test(chunk))
+    .map((chunk) => parseInt(chunk, 10))
+    .filter((id) => id > 0);
+  return Array.from(new Set(out));
 }
 
 function Lightbox({
@@ -247,10 +258,17 @@ export default function Test() {
     taxon_id?: string;
     num_questions?: string;
     num_species?: string;
+    species?: string;
     lat?: string;
     lng?: string;
     radius?: string;
   }>();
+
+  const customSpeciesIds = useMemo(
+    () => parseIdList(first(params.species)),
+    [params.species],
+  );
+  const isCustomTest = customSpeciesIds.length > 0;
 
   const taxonId = (() => {
     const id = first(params.taxon_id);
@@ -284,16 +302,44 @@ export default function Test() {
 
   /* Fetch taxon name */
   useEffect(() => {
+    if (isCustomTest) {
+      setTaxonName('Test personalitzat');
+      return;
+    }
     fetch(
       `https://api.inaturalist.org/v1/taxa?id=${taxonId}&locale=ca&per_page=1`,
     )
       .then((r) => r.json())
       .then((json) => setTaxonName(returnName(json.results[0])))
       .catch(console.error);
-  }, [taxonId]);
+  }, [taxonId, isCustomTest]);
 
   /* Fetch species pool */
   useEffect(() => {
+    if (isCustomTest) {
+      if (customSpeciesIds.length === 0) {
+        setData({ total_results: 0, results: [] });
+        return;
+      }
+      fetch(
+        `https://api.inaturalist.org/v1/taxa?id=${customSpeciesIds.join(
+          ',',
+        )}&locale=ca&per_page=${customSpeciesIds.length}`,
+      )
+        .then((r) => r.json())
+        .then((json) =>
+          setData({
+            total_results: json.total_results ?? json.results.length,
+            results: json.results.map((taxon: any) => ({
+              ...taxon,
+              observations_count: 1,
+            })),
+          }),
+        )
+        .catch(console.error);
+      return;
+    }
+
     fetch(
       `https://api.inaturalist.org/v1/observations/species_counts?taxon_id=${taxonId}&lat=${coords.lat}&lng=${coords.lng}&radius=${coords.radius}&per_page=${numSpecies}&locale=ca`,
     )
@@ -309,7 +355,7 @@ export default function Test() {
       )
       .catch(console.error);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [taxonId, numSpecies]);
+  }, [taxonId, numSpecies, coords.lat, coords.lng, coords.radius, isCustomTest, customSpeciesIds]);
 
   const generateQuestion = useCallback(() => {
     const d = dataRef.current;
@@ -321,7 +367,7 @@ export default function Test() {
       return;
     }
 
-    const species = filterZeros(d.results);
+    const species = isCustomTest ? d.results : filterZeros(d.results);
     const numOpts = Math.min(species.length, 5);
     if (numOpts === 0) {
       setQuestion({ url: null, species: null, correct: null });

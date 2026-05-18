@@ -66,7 +66,7 @@ export default function SpeciesSearchScreen({
             const res = await fetch(
                 `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(
                     text
-                )}&locale=cat`,
+                )}&locale=cat&rank=species`,
                 {
                     headers: {
                         Accept: "application/json",
@@ -181,11 +181,24 @@ export default function SpeciesSearchScreen({
 
     return (
         <View style={styles.page}>
+            {selected.length > 0 && (
+                <View style={styles.selectionSection}>
+                    <Text style={styles.selectionTitle}>
+                        Espècies seleccionades ({selected.length})
+                    </Text>
+
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        keyboardShouldPersistTaps="handled"
+                        contentContainerStyle={styles.selectionScroll}
+                    >
+                        {selected.map(renderSelection)}
+                    </ScrollView>
+                </View>
+            )}
             <View style={styles.container}>
                 <View style={styles.headerCard}>
-                    <Text style={styles.title}>
-                        Cercador d'espècies
-                    </Text>
 
                     <Text style={styles.subtitle}>
                         Cerca i selecciona espècies de iNaturalist
@@ -227,23 +240,6 @@ export default function SpeciesSearchScreen({
                         />
                     )}
                 </View>
-
-                {selected.length > 0 && (
-                    <View style={styles.selectionSection}>
-                        <Text style={styles.selectionTitle}>
-                            Espècies seleccionades ({selected.length})
-                        </Text>
-
-                        <ScrollView
-                            horizontal
-                            showsHorizontalScrollIndicator={false}
-                            keyboardShouldPersistTaps="handled"
-                            contentContainerStyle={styles.selectionScroll}
-                        >
-                            {selected.map(renderSelection)}
-                        </ScrollView>
-                    </View>
-                )}
             </View>
         </View>
     );
