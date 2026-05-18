@@ -85,6 +85,7 @@ export default function NewTest() {
 
         <Button label="Comença" onPress={start} disabled={!canStart} />
       </Card>
+      <Button label="Fes un test personalitzat!" onPress={() => router.push('/new_test/custom_test')} />
 
       <Card style={styles.hintCard}>
         <Text style={styles.hint}>
