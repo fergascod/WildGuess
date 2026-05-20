@@ -38,7 +38,7 @@ export default function Home() {
         </Text>
         <Text
           style={styles.footerLink}
-          onPress={() => Linking.openURL('https://github.com/fernando-gaston')}
+          onPress={() => Linking.openURL('https://github.com/fergascod')}
         >
           GitHub
         </Text>
