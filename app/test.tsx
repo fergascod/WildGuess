@@ -8,12 +8,15 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   useWindowDimensions,
   View,
 } from 'react-native';
 
 import { Button } from '@/components/ui';
 import { returnName } from '@/lib/utils';
+import { useAuthContext } from '@/hooks/use-auth-context'
+import { supabase } from '@/lib/supabase'
 import { cardShadow, colors, fonts, radius, spacing } from '@/theme/theme';
 
 type PhotoInfo = { url: string; attribution?: string };
@@ -62,6 +65,168 @@ function parseIdList(value: string | undefined): number[] {
     .filter((id) => id > 0);
   return Array.from(new Set(out));
 }
+
+export type SavedTest = {
+  name: string;
+  speciesIds: number[];
+  savedAt: string;
+};
+
+function SaveTestModal({
+  visible,
+  speciesIds,
+  onClose,
+}: {
+  visible: boolean;
+  speciesIds: number[];
+  onClose: () => void;
+}) {
+  const { claims } = useAuthContext();
+  const [name, setName] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  // Reset state when modal opens
+  useEffect(() => {
+    if (visible) {
+      setName('');
+      setError(null);
+      setSaved(false);
+    }
+  }, [visible]);
+
+  const handleSave = async () => {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setError('Posa un nom al test.');
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      const existing: SavedTest[] = claims?.user_metadata?.saved_tests ?? [];
+      const newTest: SavedTest = {
+        name: trimmed,
+        speciesIds,
+        savedAt: new Date().toISOString(),
+      };
+      const updated = [...existing, newTest];
+      const { error: supabaseError } = await supabase.auth.updateUser({
+        data: { saved_tests: updated },
+      });
+      if (supabaseError) throw supabaseError;
+      setSaved(true);
+    } catch (e: any) {
+      setError(e?.message ?? 'Error desant el test.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={saveStyles.backdrop}>
+        <View style={saveStyles.dialog}>
+          {saved ? (
+            <>
+              <Text style={saveStyles.title}>✅ Test desat!</Text>
+              <Text style={saveStyles.subtitle}>
+                Pots veure'l al teu perfil.
+              </Text>
+              <Button label="Tancar" onPress={onClose} style={saveStyles.btn} />
+            </>
+          ) : (
+            <>
+              <Text style={saveStyles.title}>Desa el test</Text>
+              <Text style={saveStyles.subtitle}>
+                Posa-li un nom per identificar-lo al teu perfil.
+              </Text>
+              <TextInput
+                style={saveStyles.input}
+                placeholder="Nom del test…"
+                placeholderTextColor={colors.muted}
+                value={name}
+                onChangeText={setName}
+                autoFocus
+                maxLength={60}
+              />
+              {error && <Text style={saveStyles.error}>{error}</Text>}
+              <View style={saveStyles.row}>
+                <Button
+                  label="Cancel·lar"
+                  variant="secondary"
+                  onPress={onClose}
+                  style={saveStyles.btn}
+                />
+                <Button
+                  label={saving ? 'Desant…' : 'Desa'}
+                  onPress={handleSave}
+                  style={saveStyles.btn}
+                />
+              </View>
+            </>
+          )}
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const saveStyles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xl,
+  },
+  dialog: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: colors.surface,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.xl,
+    gap: spacing.md,
+    ...cardShadow,
+  },
+  title: {
+    fontFamily: fonts.display,
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: colors.muted,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    fontSize: 15,
+    color: colors.text,
+    backgroundColor: colors.bg,
+  },
+  error: {
+    fontSize: 13,
+    color: colors.wrong,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    justifyContent: 'flex-end',
+    marginTop: spacing.xs,
+  },
+  btn: {
+    width: 'auto',
+    paddingHorizontal: spacing.xl,
+  },
+});
 
 function Lightbox({
   uri,
@@ -165,18 +330,28 @@ function Results({
   numQuestions,
   answeredQuestions,
   onRestart,
+  speciesList,
 }: {
   points: number;
   numQuestions: number;
   answeredQuestions: AnsweredQuestion[];
   onRestart: () => void;
+  speciesList: string[];
 }) {
+  const { isLoggedIn } = useAuthContext()
+
   const [activeImage, setActiveImage] = useState<string | null>(null);
+  const [saveModalVisible, setSaveModalVisible] = useState(false);
   const pct = Math.round((points / numQuestions) * 100);
 
   return (
     <ScrollView style={styles.pageScroll} contentContainerStyle={styles.resultsPage}>
       <Lightbox uri={activeImage} onClose={() => setActiveImage(null)} />
+      <SaveTestModal
+        visible={saveModalVisible}
+        speciesIds={speciesList as number[]}
+        onClose={() => setSaveModalVisible(false)}
+      />
 
       <View style={styles.resultsWrap}>
         <View style={styles.resultsScore}>
@@ -196,6 +371,15 @@ function Results({
             onPress={onRestart}
             style={styles.actionBtn}
           />
+          {/* Display save button only if user is logged in 
+          and speciesList is available */}
+          {(isLoggedIn && speciesList.length > 0) && <Button
+            label="💾 Guarda el test"
+            variant="secondary"
+            style={styles.actionBtn}
+            onPress={() => setSaveModalVisible(true)}
+          />}
+
         </View>
 
         <Text style={styles.resultsHeading}>Respostes</Text>
@@ -424,6 +608,7 @@ export default function Test() {
         numQuestions={numQuestions}
         answeredQuestions={answeredQuestions}
         onRestart={restart}
+        speciesList={customSpeciesIds}
       />
     );
   }

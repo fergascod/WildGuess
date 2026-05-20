@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { useState } from 'react'
-import { Button } from 'react-native'
+import { Button } from '@/components/ui'
 
 export default function SignOutButton() {
     const [loading, setLoading] = useState(false)
@@ -16,7 +16,7 @@ export default function SignOutButton() {
 
     return (
         <Button
-            title={loading ? 'Signing out…' : 'Sign out'}
+            label={loading ? 'Signing out…' : 'Sign out'}
             onPress={handleSignOut}
             disabled={loading}
         />
