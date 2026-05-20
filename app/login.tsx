@@ -3,6 +3,7 @@ import { Link, Stack, useRouter } from 'expo-router'
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native'
 import { supabase } from '@/lib/supabase'
 import { useForm, Controller } from 'react-hook-form'
+import { Screen } from '@/components/ui'
 import { useState } from 'react'
 
 type FormData = {
@@ -36,7 +37,7 @@ export default function LoginScreen() {
     }
 
     return (
-        <>
+        <Screen>
             <Stack.Screen options={{ title: 'Login' }} />
             <View style={styles.container}>
                 <Text style={styles.title}>Log in</Text>
@@ -76,7 +77,6 @@ export default function LoginScreen() {
                     render={({ field: { onChange, onBlur, value } }) => (
                         <TextInput
                             style={[styles.input, errors.password && styles.inputError]}
-                            placeholder="••••••••"
                             secureTextEntry
                             onBlur={onBlur}
                             onChangeText={onChange}
@@ -104,7 +104,7 @@ export default function LoginScreen() {
                     <Text style={styles.signupLinkText}>Don't have an account? Sign up</Text>
                 </Link>
             </View>
-        </>
+        </Screen>
     )
 }
 

@@ -12,17 +12,33 @@ import {
 } from 'react-native'
 import { Screen, Card, Button } from '@/components/ui'
 import type { SavedTest } from '@/app/test'
+import { supabase } from '@/lib/supabase'
 
 import { colors, spacing, radius, fonts, cardShadow } from '@/theme/theme'
 
 type SpeciesInfo = { id: number; name: string }
 
-function SavedTestCard({ test }: { test: SavedTest }) {
+function SavedTestCard({ test, onDelete }: { test: SavedTest; onDelete: () => void }) {
     const router = useRouter()
     const [expanded, setExpanded] = useState(false)
-    const [numQuestions, setNumQuestions] = useState(String(10))
+    const [numQuestions, setNumQuestions] = useState(String(Math.min(10, test.speciesIds.length)))
     const [species, setSpecies] = useState<SpeciesInfo[]>([])
     const [loadingSpecies, setLoadingSpecies] = useState(false)
+    const [deleting, setDeleting] = useState(false)
+
+    const handleDelete = async () => {
+        setDeleting(true)
+        try {
+            const { data: { user } } = await supabase.auth.getUser()
+            const existing: SavedTest[] = user?.user_metadata?.saved_tests ?? []
+            const updated = existing.filter(t => t.savedAt !== test.savedAt)
+            await supabase.auth.updateUser({ data: { saved_tests: updated } })
+            onDelete()
+        } catch (e) {
+            console.error(e)
+            setDeleting(false)
+        }
+    }
 
     useEffect(() => {
         if (!expanded || species.length > 0) return
@@ -77,6 +93,14 @@ function SavedTestCard({ test }: { test: SavedTest }) {
                     </Text>
                 </View>
                 <Text style={styles.chevron}>{expanded ? '▲' : '▼'}</Text>
+                <TouchableOpacity
+                    style={styles.deleteBtn}
+                    onPress={handleDelete}
+                    disabled={deleting}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                    <Text style={styles.deleteBtnText}>{deleting ? '…' : '🗑️'}</Text>
+                </TouchableOpacity>
             </TouchableOpacity>
 
             {/* Expanded panel */}
@@ -133,16 +157,19 @@ function SavedTestCard({ test }: { test: SavedTest }) {
                             style={styles.numBtn}
                             onPress={() => {
                                 const n = parseInt(numQuestions, 10)
-                                if (!isNaN(n) && n < 20)
+                                if (!isNaN(n) && n < test.speciesIds.length)
                                     setNumQuestions(String(n + 1))
                             }}
                         >
                             <Text style={styles.numBtnText}>+</Text>
                         </TouchableOpacity>
+                        <Text style={styles.numMax}>
+                            màx. {test.speciesIds.length}
+                        </Text>
                     </View>
 
                     <Button
-                        label={`Comença el test`}
+                        label={`Comença el test (${clampedN} preguntes)`}
                         onPress={handleStart}
                         style={styles.startBtn}
                     />
@@ -162,6 +189,11 @@ export default function Profile() {
         profile?.username ?? claims?.user_metadata?.username ?? claims?.email
 
     const savedTests: SavedTest[] = claims?.user_metadata?.saved_tests ?? []
+    const [localTests, setLocalTests] = useState<SavedTest[]>(savedTests)
+
+    const handleDelete = (savedAt: string) => {
+        setLocalTests(prev => prev.filter(t => t.savedAt !== savedAt))
+    }
 
     return (
         <Screen>
@@ -174,12 +206,12 @@ export default function Profile() {
                     </View>
                 </Card>
 
-                {savedTests.length > 0 && (
+                {localTests.length > 0 && (
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Tests desats</Text>
                         <View style={styles.testList}>
-                            {savedTests.map((test, i) => (
-                                <SavedTestCard key={i} test={test} />
+                            {localTests.map((test, i) => (
+                                <SavedTestCard key={test.savedAt} test={test} onDelete={() => handleDelete(test.savedAt)} />
                             ))}
                         </View>
                     </View>
@@ -250,6 +282,12 @@ const styles = StyleSheet.create({
     chevron: {
         fontSize: 11,
         color: colors.muted,
+    },
+    deleteBtn: {
+        padding: spacing.xs,
+    },
+    deleteBtnText: {
+        fontSize: 16,
     },
     // Expanded body
     testCardBody: {
