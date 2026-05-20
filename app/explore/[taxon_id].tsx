@@ -1,5 +1,5 @@
-import { Link, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { Link, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -7,6 +7,8 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
+  TouchableOpacity,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -90,11 +92,136 @@ function TaxonCard({ taxonId, data }: { taxonId: string; data: TaxonData }) {
   );
 }
 
+interface SearchResult {
+  id: number;
+  name: string;
+
+  preferred_common_name?: string;
+  default_photo?: { square_url: string };
+  rank: string;
+  matched_term: string;
+}
+
+function TaxonSearch({ onClose }: { onClose: () => void }) {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const fetchResults = useCallback(async (text: string) => {
+    if (!text.trim()) { setResults([]); return; }
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(text)}&locale=ca&per_page=10`,
+        { headers: { Accept: 'application/json' } },
+      );
+      const data = await res.json();
+      setResults(data.results ?? []);
+    } catch {
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleChangeText = (text: string) => {
+    setQuery(text);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => fetchResults(text), 350);
+  };
+
+  const handlePick = (id: number) => {
+    onClose();
+    router.push(`/explore/${id}`);
+  };
+
+  return (
+    <View style={styles.searchContainer}>
+      <TextInput
+        value={query}
+        onChangeText={handleChangeText}
+        placeholder="Cerca un taxó..."
+        placeholderTextColor={colors.muted}
+        autoFocus
+        autoCorrect={false}
+        autoCapitalize="none"
+        style={styles.searchInput}
+      />
+      {loading && (
+        <View style={styles.searchLoading}>
+          <ActivityIndicator color={colors.accent} size="small" />
+        </View>
+      )}
+      {!loading && results.length > 0 && (
+        <ScrollView style={styles.searchResults} keyboardShouldPersistTaps="handled">
+          {results.map((item) => (
+            <TouchableOpacity
+              key={item.id}
+              style={styles.searchItem}
+              activeOpacity={0.75}
+              onPress={() => handlePick(item.id)}
+            >
+              {item.default_photo?.square_url ? (
+                <Image
+                  source={{ uri: item.default_photo.square_url }}
+                  style={styles.searchItemImage}
+                />
+              ) : (
+                <View style={[styles.searchItemImage, styles.searchItemImagePlaceholder]}>
+                  <Text style={styles.placeholderText}>?</Text>
+                </View>
+              )}
+              <View style={styles.searchItemContent}>
+                <Text style={styles.searchItemName} numberOfLines={1}>{item.matched_term}</Text>
+                {item.preferred_common_name && (
+                  <Text style={styles.searchItemCommon} numberOfLines={1}>
+                    {item.preferred_common_name}
+                  </Text>
+                )}
+                <Text style={styles.searchItemRank}>{item.rank}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
+      {!loading && query.trim().length > 0 && results.length === 0 && (
+        <Text style={styles.emptyText}>Cap resultat</Text>
+      )}
+    </View>
+  );
+}
+
 function TaxonSidebar({ taxa, wide }: { taxa: ChildTaxon[]; wide: boolean }) {
+  const [searching, setSearching] = useState(false);
+
   return (
     <View style={[styles.card, styles.sidebar, wide && styles.sidebarWide]}>
-      <Text style={styles.sidebarTitle}>Subtaxons</Text>
-      {taxa.length === 0 ? (
+      {/* Header row */}
+      <View style={styles.sidebarHeader}>
+        {searching ? (
+          <Text style={[styles.sidebarTitle, styles.sidebarTitleRow]}>Cerca taxó</Text>
+        ) : (
+          <Text style={[styles.sidebarTitle, styles.sidebarTitleRow]}>Subtaxons</Text>
+        )}
+        <TouchableOpacity
+          style={[styles.searchIconBtn, searching && styles.searchIconBtnActive]}
+          activeOpacity={0.7}
+          onPress={() => setSearching((v) => !v)}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          {searching ? (
+            <Text style={styles.searchIconText}>✕</Text>
+          ) : (
+            <Text style={styles.searchIconText}>🔍</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {searching ? (
+        <TaxonSearch onClose={() => setSearching(false)} />
+      ) : taxa.length === 0 ? (
         <Text style={styles.emptyText}>Sense subtaxons</Text>
       ) : (
         <ScrollView style={styles.sidebarScroll}>
@@ -288,10 +415,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: colors.text,
-    paddingBottom: spacing.sm,
-    marginBottom: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   sidebarScroll: {
     flex: 1,
@@ -316,5 +439,108 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontStyle: 'italic',
     color: colors.muted,
+  },
+
+  // Sidebar header with search icon
+  sidebarHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: spacing.sm,
+    marginBottom: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  sidebarTitleRow: {
+    paddingBottom: 0,
+    marginBottom: 0,
+    borderBottomWidth: 0,
+    flex: 1,
+  },
+  searchIconBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: radius.sm,
+    backgroundColor: colors.bg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: spacing.sm,
+  },
+  searchIconBtnActive: {
+    backgroundColor: colors.accentLight,
+    borderColor: colors.accent,
+  },
+  searchIconText: {
+    fontSize: 14,
+    lineHeight: 18,
+  },
+
+  // TaxonSearch styles
+  searchContainer: {
+    flex: 1,
+    gap: spacing.sm,
+  },
+  searchInput: {
+    backgroundColor: colors.bg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    fontSize: 14,
+    color: colors.text,
+  },
+  searchLoading: {
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  searchResults: {
+    flex: 1,
+  },
+  searchItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xs,
+    borderRadius: radius.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  searchItemImage: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.sm,
+    backgroundColor: colors.accentLight,
+    flexShrink: 0,
+  },
+  searchItemImagePlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  placeholderText: {
+    color: colors.muted,
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  searchItemContent: {
+    flex: 1,
+    gap: 1,
+  },
+  searchItemName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  searchItemCommon: {
+    fontSize: 11,
+    color: colors.muted,
+  },
+  searchItemRank: {
+    fontSize: 10,
+    color: colors.muted,
+    textTransform: 'capitalize',
   },
 });
