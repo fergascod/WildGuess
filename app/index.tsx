@@ -25,6 +25,7 @@ export default function Home() {
         />
       </View>
 
+
       <View style={styles.footer}>
         <Text style={styles.footerText}>Desenvolupat per Fernando Gastón</Text>
         <Text

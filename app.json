@@ -6,7 +6,6 @@
     "orientation": "portrait",
     "scheme": "oceanid",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.oceanid.app",
@@ -16,7 +15,10 @@
     },
     "android": {
       "package": "com.oceanid.app",
-      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -24,7 +26,8 @@
     },
     "plugins": [
       "expo-router",
-      "expo-location"
+      "expo-location",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
