@@ -21,7 +21,7 @@ type SpeciesInfo = { id: number; name: string }
 function SavedTestCard({ test, onDelete }: { test: SavedTest; onDelete: () => void }) {
     const router = useRouter()
     const [expanded, setExpanded] = useState(false)
-    const [numQuestions, setNumQuestions] = useState(String(Math.min(10, test.speciesIds.length)))
+    const [numQuestions, setNumQuestions] = useState(String(10))
     const [species, setSpecies] = useState<SpeciesInfo[]>([])
     const [loadingSpecies, setLoadingSpecies] = useState(false)
     const [deleting, setDeleting] = useState(false)
@@ -69,12 +69,6 @@ function SavedTestCard({ test, onDelete }: { test: SavedTest; onDelete: () => vo
         const speciesParam = test.speciesIds.join('%2C')
         router.push(`/test?num_questions=${validN}&species=${speciesParam}`)
     }
-
-    const clampedN = (() => {
-        const n = parseInt(numQuestions, 10)
-        if (isNaN(n) || n < 1) return 1
-        return Math.min(n, test.speciesIds.length)
-    })()
 
     return (
         <View style={styles.testCard}>
@@ -157,19 +151,16 @@ function SavedTestCard({ test, onDelete }: { test: SavedTest; onDelete: () => vo
                             style={styles.numBtn}
                             onPress={() => {
                                 const n = parseInt(numQuestions, 10)
-                                if (!isNaN(n) && n < test.speciesIds.length)
+                                if (!isNaN(n))
                                     setNumQuestions(String(n + 1))
                             }}
                         >
                             <Text style={styles.numBtnText}>+</Text>
                         </TouchableOpacity>
-                        <Text style={styles.numMax}>
-                            màx. {test.speciesIds.length}
-                        </Text>
                     </View>
 
                     <Button
-                        label={`Comença el test (${clampedN} preguntes)`}
+                        label={`Comença el test`}
                         onPress={handleStart}
                         style={styles.startBtn}
                     />
