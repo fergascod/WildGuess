@@ -16,6 +16,9 @@ import {
 
 import { Button } from '@/components/ui';
 import { returnName } from '@/lib/utils';
+import { useAuthContext } from '@/hooks/use-auth-context';
+import { supabase } from '@/lib/supabase';
+import Svg, { Path } from 'react-native-svg';
 import { cardShadow, colors, fonts, radius, spacing } from '@/theme/theme';
 
 interface TaxonData {
@@ -51,15 +54,85 @@ function normalizeId(raw: string | string[] | undefined): string {
   return id && /^\+?(0|[1-9]\d*)$/.test(id) ? id : '1';
 }
 
+export type SavedTaxon = {
+  id: number;
+  name: string;
+  imageUrl: string | null;
+};
+
+function BookmarkButton({ taxonId, taxonName, imageUrl }: { taxonId: string; taxonName: string; imageUrl: string | null }) {
+  const { claims, isLoggedIn } = useAuthContext();
+  const existing: SavedTaxon[] = claims?.user_metadata?.saved_taxons ?? [];
+  const alreadySaved = existing.some(t => String(t.id) === taxonId);
+  const [bookmarked, setBookmarked] = useState(alreadySaved);
+  const [saving, setSaving] = useState(false);
+
+  const handleToggle = async () => {
+    if (!isLoggedIn || saving) return;
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const current: SavedTaxon[] = user?.user_metadata?.saved_taxons ?? [];
+      const updated = bookmarked
+        ? current.filter(t => String(t.id) !== taxonId)
+        : [...current, { id: Number(taxonId), name: taxonName, imageUrl }];
+      await supabase.auth.updateUser({ data: { saved_taxons: updated } });
+      setBookmarked(b => !b);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!isLoggedIn) return null;
+
+  return (
+    <TouchableOpacity
+      onPress={handleToggle}
+      disabled={saving}
+      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      style={bookmarkStyles.btn}
+      accessibilityLabel={bookmarked ? 'Elimina dels guardats' : 'Desa taxó'}
+    >
+      <Svg width={22} height={22} viewBox="0 0 24 24">
+        {bookmarked ? (
+          <Path
+            d="M5 3a2 2 0 0 0-2 2v16l9-4 9 4V5a2 2 0 0 0-2-2H5z"
+            fill={colors.accent}
+          />
+        ) : (
+          <Path
+            d="M5 3a2 2 0 0 0-2 2v16l9-4 9 4V5a2 2 0 0 0-2-2H5z"
+            fill="none"
+            stroke={colors.muted}
+            strokeWidth={1.8}
+            strokeLinejoin="round"
+          />
+        )}
+      </Svg>
+    </TouchableOpacity>
+  );
+}
+
+const bookmarkStyles = StyleSheet.create({
+  btn: {
+    padding: spacing.xs,
+  },
+});
+
 function TaxonCard({ taxonId, data }: { taxonId: string; data: TaxonData }) {
-  const imageUrl = data.image?.url.replace('square', 'original');
+  const imageUrl = data.image?.url.replace('square', 'original') ?? null;
   const externalUrl = `https://www.inaturalist.org/taxa/${taxonId}` as ExternalPathString;
 
   return (
     <View style={[styles.card, styles.mainCard]}>
-      <Link href={externalUrl} asChild>
-        <Text style={styles.cardTitle}>{data.taxon_name}</Text>
-      </Link>
+      <View style={styles.titleRow}>
+        <BookmarkButton taxonId={taxonId} taxonName={data.taxon_name} imageUrl={imageUrl} />
+        <Link href={externalUrl} asChild>
+          <Text style={styles.cardTitle}>{data.taxon_name}</Text>
+        </Link>
+      </View>
 
       {data.parent_id != null && (
         <Link href={`/explore/${data.parent_id}`} asChild>
@@ -234,7 +307,6 @@ function TaxonSidebar({ taxa, wide }: { taxa: ChildTaxon[]; wide: boolean }) {
               <Pressable style={StyleSheet.flatten(styles.sidebarItem)}>
                 <Text style={styles.sidebarItemText}>
                   {child.name}
-                  <Text style={styles.sidebarId}> ({child.id})</Text>
                 </Text>
               </Pressable>
             </Link>
@@ -355,6 +427,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
     color: colors.text,
+    flexShrink: 1,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    flexWrap: 'wrap',
   },
   parentLink: {
     fontSize: 14,

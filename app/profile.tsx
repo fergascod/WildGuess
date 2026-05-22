@@ -3,6 +3,7 @@ import { useAuthContext } from '@/hooks/use-auth-context'
 import { Redirect, useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
 import {
+    Image,
     ScrollView,
     StyleSheet,
     Text,
@@ -12,6 +13,7 @@ import {
 } from 'react-native'
 import { Screen, Card, Button } from '@/components/ui'
 import type { SavedTest } from '@/app/test'
+import type { SavedTaxon } from '@/app/explore/[taxon_id]'
 import { supabase } from '@/lib/supabase'
 
 import { colors, spacing, radius, fonts, cardShadow } from '@/theme/theme'
@@ -172,6 +174,7 @@ function SavedTestCard({ test, onDelete }: { test: SavedTest; onDelete: () => vo
 
 export default function Profile() {
     const { claims, profile, isLoading, isLoggedIn } = useAuthContext()
+    const router = useRouter()
 
     if (isLoading) return null
     if (!isLoggedIn) return <Redirect href="/login" />
@@ -181,6 +184,8 @@ export default function Profile() {
 
     const savedTests: SavedTest[] = claims?.user_metadata?.saved_tests ?? []
     const [localTests, setLocalTests] = useState<SavedTest[]>(savedTests)
+
+    const savedTaxons: SavedTaxon[] = claims?.user_metadata?.saved_taxons ?? []
 
     const handleDelete = (savedAt: string) => {
         setLocalTests(prev => prev.filter(t => t.savedAt !== savedAt))
@@ -196,6 +201,39 @@ export default function Profile() {
                         <SignOutButton />
                     </View>
                 </Card>
+
+                {savedTaxons.length > 0 && (
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>Taxons guardats</Text>
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={styles.taxonRow}
+                        >
+                            {savedTaxons.map(taxon => (
+                                <TouchableOpacity
+                                    key={taxon.id}
+                                    style={styles.taxonCard}
+                                    activeOpacity={0.75}
+                                    onPress={() => router.push(`/explore/${taxon.id}`)}
+                                >
+                                    {taxon.imageUrl ? (
+                                        <Image
+                                            source={{ uri: taxon.imageUrl }}
+                                            style={styles.taxonImage}
+                                            resizeMode="cover"
+                                        />
+                                    ) : (
+                                        <View style={[styles.taxonImage, styles.taxonImagePlaceholder]}>
+                                            <Text style={styles.taxonImagePlaceholderText}>?</Text>
+                                        </View>
+                                    )}
+                                    <Text style={styles.taxonName} numberOfLines={2}>{taxon.name}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    </View>
+                )}
 
                 {localTests.length > 0 && (
                     <View style={styles.section}>
@@ -240,6 +278,41 @@ const styles = StyleSheet.create({
     },
     testList: {
         gap: spacing.md,
+    },
+    taxonRow: {
+        flexDirection: 'row',
+        gap: spacing.md,
+        paddingBottom: spacing.xs,
+    },
+    taxonCard: {
+        width: 100,
+        borderRadius: radius.card,
+        borderWidth: 1,
+        borderColor: colors.border,
+        backgroundColor: colors.surface,
+        overflow: 'hidden',
+        ...cardShadow,
+    },
+    taxonImage: {
+        width: '100%',
+        height: 80,
+    },
+    taxonImagePlaceholder: {
+        backgroundColor: colors.accentLight,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    taxonImagePlaceholderText: {
+        fontSize: 22,
+        color: colors.muted,
+    },
+    taxonName: {
+        fontSize: 12,
+        fontWeight: '500',
+        color: colors.text,
+        padding: spacing.xs,
+        textAlign: 'center',
+        fontStyle: 'italic',
     },
     // Test card
     testCard: {
