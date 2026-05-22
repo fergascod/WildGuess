@@ -98,12 +98,12 @@ function BookmarkButton({ taxonId, taxonName, imageUrl }: { taxonId: string; tax
       <Svg width={22} height={22} viewBox="0 0 24 24">
         {bookmarked ? (
           <Path
-            d="M5 3a2 2 0 0 0-2 2v16l9-4 9 4V5a2 2 0 0 0-2-2H5z"
+            d="M5 3a2 2 0 0 0-2 2v16l6-4 6 4V5a2 2 0 0 0-2-2H5z"
             fill={colors.accent}
           />
         ) : (
           <Path
-            d="M5 3a2 2 0 0 0-2 2v16l9-4 9 4V5a2 2 0 0 0-2-2H5z"
+            d="M5 3a2 2 0 0 0-2 2v16l6-4 6 4V5a2 2 0 0 0-2-2H5z"
             fill="none"
             stroke={colors.muted}
             strokeWidth={1.8}
@@ -128,10 +128,10 @@ function TaxonCard({ taxonId, data }: { taxonId: string; data: TaxonData }) {
   return (
     <View style={[styles.card, styles.mainCard]}>
       <View style={styles.titleRow}>
-        <BookmarkButton taxonId={taxonId} taxonName={data.taxon_name} imageUrl={imageUrl} />
         <Link href={externalUrl} asChild>
           <Text style={styles.cardTitle}>{data.taxon_name}</Text>
         </Link>
+        <BookmarkButton taxonId={taxonId} taxonName={data.taxon_name} imageUrl={imageUrl} />
       </View>
 
       {data.parent_id != null && (
