@@ -1,20 +1,20 @@
 {
   "expo": {
-    "name": "Ocean ID",
-    "slug": "ocean-id",
+    "name": "WildGuess",
+    "slug": "wildguess",
     "version": "0.1.0",
     "orientation": "portrait",
-    "scheme": "oceanid",
+    "scheme": "wildguess",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.oceanid.app",
+      "bundleIdentifier": "com.wildguess.app",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Ocean ID uses your location to suggest species observed near you."
+        "NSLocationWhenInUseUsageDescription": "WildGuess uses your location to suggest species observed near you."
       }
     },
     "android": {
-      "package": "com.oceanid.app",
+      "package": "com.wildguess.app",
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"

@@ -1,10 +1,11 @@
 
 import { Link, Stack, useRouter } from 'expo-router'
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native'
+import { StyleSheet, View, Text, TextInput } from 'react-native'
 import { supabase } from '@/lib/supabase'
 import { useForm, Controller } from 'react-hook-form'
-import { Screen } from '@/components/ui'
+import { Button, Card, FormField, Screen, Title, styles as uiStyles } from '@/components/ui'
 import { useState } from 'react'
+import { colors, spacing } from '@/theme/theme'
 
 type FormData = {
     email: string
@@ -37,130 +38,106 @@ export default function LoginScreen() {
     }
 
     return (
-        <Screen>
+        <Screen contentStyle={styles.content}>
             <Stack.Screen options={{ title: 'Login' }} />
-            <View style={styles.container}>
-                <Text style={styles.title}>Log in</Text>
+            <Card style={styles.card}>
 
-                {/* EMAIL */}
-                <Text style={styles.label}>Email</Text>
-                <Controller
-                    control={control}
-                    name="email"
-                    rules={{
-                        required: 'Email is required',
-                        pattern: { value: /\S+@\S+\.\S+/, message: 'Invalid email' },
-                    }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <TextInput
-                            style={[styles.input, errors.email && styles.inputError]}
-                            placeholder="you@example.com"
-                            autoCapitalize="none"
-                            keyboardType="email-address"
-                            onBlur={onBlur}
-                            onChangeText={onChange}
-                            value={value}
-                        />
-                    )}
-                />
-                {errors.email && <Text style={styles.error}>{errors.email.message}</Text>}
 
-                {/* PASSWORD */}
-                <Text style={styles.label}>Password</Text>
-                <Controller
-                    control={control}
-                    name="password"
-                    rules={{
-                        required: 'Password is required',
-                        minLength: { value: 8, message: 'At least 8 characters' },
-                    }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <TextInput
-                            style={[styles.input, errors.password && styles.inputError]}
-                            secureTextEntry
-                            onBlur={onBlur}
-                            onChangeText={onChange}
-                            value={value}
-                        />
-                    )}
-                />
-                {errors.password && <Text style={styles.error}>{errors.password.message}</Text>}
+                <FormField label="Email" error={errors.email?.message}>
+                    <Controller
+                        control={control}
+                        name="email"
+                        rules={{
+                            required: 'Email is required',
+                            pattern: { value: /\S+@\S+\.\S+/, message: 'Invalid email' },
+                        }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <TextInput
+                                style={[uiStyles.input, errors.email && styles.inputError]}
+                                autoCapitalize="none"
+                                keyboardType="email-address"
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                value={value}
+                            />
+                        )}
+                    />
+                </FormField>
 
-                {/* Supabase-level error */}
+                <FormField label="Password" error={errors.password?.message}>
+                    <Controller
+                        control={control}
+                        name="password"
+                        rules={{
+                            required: 'Password is required',
+                            minLength: { value: 8, message: 'At least 8 characters' },
+                        }}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <TextInput
+                                style={[uiStyles.input, errors.password && styles.inputError]}
+                                secureTextEntry
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                value={value}
+                            />
+                        )}
+                    />
+                </FormField>
+
                 {authError && <Text style={styles.error}>{authError}</Text>}
 
-                <TouchableOpacity
-                    style={[styles.button, loading && styles.buttonDisabled]}
+                <Button
+                    label={loading ? 'Logging in…' : 'Log in'}
                     onPress={handleSubmit(onSubmit)}
                     disabled={loading}
-                >
-                    {loading
-                        ? <ActivityIndicator color="#fff" />
-                        : <Text style={styles.buttonText}>Log in</Text>
-                    }
-                </TouchableOpacity>
+                />
 
-                <Link href="/signup" style={styles.signupLink}>
-                    <Text style={styles.signupLinkText}>Don't have an account? Sign up</Text>
-                </Link>
-            </View>
+                <View style={styles.linkRow}>
+                    <Text style={styles.linkHint}>Encara no tens un compte?</Text>
+                    <Link href="/signup" style={styles.linkText}>Dona't d'alta</Link>
+                </View>
+            </Card>
         </Screen>
     )
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 24,
-        justifyContent: 'center',
+    content: {
+        gap: spacing.xl,
     },
-    title: {
-        fontSize: 28,
-        fontWeight: '700',
-        marginBottom: 32,
+    card: {
+        gap: spacing.lg,
     },
-    label: {
+    header: {
+        gap: spacing.xs,
+        alignItems: 'center',
+    },
+    subtitle: {
         fontSize: 14,
-        fontWeight: '600',
-        marginBottom: 4,
-        marginTop: 16,
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 8,
-        padding: 12,
-        fontSize: 16,
+        color: colors.muted,
+        textAlign: 'center',
     },
     inputError: {
-        borderColor: '#e53e3e',
+        borderColor: colors.wrong,
     },
     error: {
-        color: '#e53e3e',
+        color: colors.wrong,
         fontSize: 12,
-        marginTop: 4,
+        textAlign: 'center',
     },
-    button: {
-        backgroundColor: '#000',
-        borderRadius: 8,
-        padding: 16,
+    linkRow: {
+        flexDirection: 'row',
         alignItems: 'center',
-        marginTop: 28,
+        justifyContent: 'center',
+        gap: spacing.xs,
     },
-    buttonDisabled: {
-        opacity: 0.5,
+    linkHint: {
+        fontSize: 13,
+        color: colors.muted,
     },
-    buttonText: {
-        color: '#fff',
-        fontWeight: '700',
-        fontSize: 16,
-    },
-    signupLink: {
-        marginTop: 20,
-        alignSelf: 'center',
-    },
-    signupLinkText: {
-        color: '#555',
-        fontSize: 14,
+    linkText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: colors.accent,
     },
 })

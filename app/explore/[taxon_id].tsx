@@ -1,4 +1,5 @@
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
+import type { ExternalPathString } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -52,10 +53,13 @@ function normalizeId(raw: string | string[] | undefined): string {
 
 function TaxonCard({ taxonId, data }: { taxonId: string; data: TaxonData }) {
   const imageUrl = data.image?.url.replace('square', 'original');
+  const externalUrl = `https://www.inaturalist.org/taxa/${taxonId}` as ExternalPathString;
 
   return (
     <View style={[styles.card, styles.mainCard]}>
-      <Text style={styles.cardTitle}>{data.taxon_name}</Text>
+      <Link href={externalUrl} asChild>
+        <Text style={styles.cardTitle}>{data.taxon_name}</Text>
+      </Link>
 
       {data.parent_id != null && (
         <Link href={`/explore/${data.parent_id}`} asChild>
