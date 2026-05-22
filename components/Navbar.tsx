@@ -22,33 +22,50 @@ function isActive(pathname: string, href: string) {
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { isLoggedIn } = useAuthContext()
+  const { claims, isLoggedIn } = useAuthContext()
 
-  const ITEMS = ITEMS_BASE.slice()
-  if (isSupabaseConfigured) {
-    ITEMS.push(
-      isLoggedIn
-        ? { label: 'Perfil', href: '/profile' }
-        : { label: 'Login', href: '/login' }
-    )
-  }
+
+
+  const authItem = isSupabaseConfigured
+    ? isLoggedIn
+      ? { label: claims?.user_metadata?.username, href: '/profile' }
+      : { label: 'Login', href: '/login' }
+    : null
 
 
   return (
     <View style={styles.nav}>
       <View style={styles.inner}>
-        {ITEMS.map((item) => {
-          const active = isActive(pathname, item.href);
-          return (
-            <Link key={item.href} href={item.href} asChild>
-              <Pressable style={styles.item}>
-                <Text style={[styles.label, active && styles.labelActive]}>
-                  {item.label}
-                </Text>
-              </Pressable>
-            </Link>
-          );
-        })}
+        <View style={styles.left}>
+          {ITEMS_BASE.map((item) => {
+            const active = isActive(pathname, item.href);
+            return (
+              <Link key={item.href} href={item.href} asChild>
+                <Pressable style={styles.item}>
+                  <Text style={[styles.label, active && styles.labelActive]}>
+                    {item.label}
+                  </Text>
+                </Pressable>
+              </Link>
+            );
+          })}
+        </View>
+        {authItem && (
+          <View style={styles.right}>
+            {(() => {
+              const active = isActive(pathname, authItem.href);
+              return (
+                <Link href={authItem.href} asChild>
+                  <Pressable style={styles.item}>
+                    <Text style={[styles.label, active && styles.labelActive]}>
+                      {authItem.label}
+                    </Text>
+                  </Pressable>
+                </Link>
+              );
+            })()}
+          </View>
+        )}
       </View>
     </View>
   );
@@ -67,10 +84,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: '100%',
     paddingHorizontal: spacing.lg,
-    gap: spacing.xl,
+    justifyContent: 'space-between',
     maxWidth: 1280,
     width: '100%',
     alignSelf: 'center',
+  },
+  left: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xl,
+  },
+  right: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   item: {
     paddingVertical: spacing.sm,

@@ -17,7 +17,7 @@ export default function Explore() {
           d&apos;animals que hi ha a la plataforma.
         </Text>
 
-        <Button label="Comença pel principi: Animalia!" href="/explore/2" />
+        <Button label="Comença!" href="/explore/48460" />
       </Card>
     </Screen>
   );
