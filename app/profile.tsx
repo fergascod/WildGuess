@@ -4,6 +4,8 @@ import { Redirect, useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
 import {
     Image,
+    Modal,
+    Pressable,
     ScrollView,
     StyleSheet,
     Text,
@@ -20,7 +22,161 @@ import { colors, spacing, radius, fonts, cardShadow } from '@/theme/theme'
 
 type SpeciesInfo = { id: number; name: string }
 
-function SavedTestCard({ test, onDelete }: { test: SavedTest; onDelete: () => void }) {
+const LOCALES = [
+    { code: 'ca', label: 'Català' },
+    { code: 'es', label: 'Español' },
+    { code: 'en', label: 'English' },
+    { code: 'fr', label: 'Français' },
+    { code: 'de', label: 'Deutsch' },
+    { code: 'pt', label: 'Português' },
+    { code: 'it', label: 'Italiano' },
+]
+
+function LocalePicker({ currentLocale, onChange }: { currentLocale: string; onChange: (code: string) => void }) {
+    const [open, setOpen] = useState(false)
+    const [saving, setSaving] = useState(false)
+    const current = LOCALES.find(l => l.code === currentLocale) ?? LOCALES[0]
+
+    const handleSelect = async (code: string) => {
+        setOpen(false)
+        if (code === currentLocale) return
+        setSaving(true)
+        try {
+            await supabase.auth.updateUser({ data: { locale: code } })
+            onChange(code)
+        } catch (e) {
+            console.error(e)
+            setSaving(false)
+        }
+    }
+
+    return (
+        <View style={localeStyles.container}>
+            <Text style={localeStyles.label}>Idioma preferit</Text>
+            <TouchableOpacity
+                style={[localeStyles.trigger, saving && localeStyles.triggerDisabled]}
+                onPress={() => !saving && setOpen(true)}
+                activeOpacity={0.7}
+            >
+                <Text style={localeStyles.triggerText}>
+                    {saving ? 'Desant…' : current.label}
+                </Text>
+                <Text style={localeStyles.triggerChevron}>▾</Text>
+            </TouchableOpacity>
+
+            <Modal
+                visible={open}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setOpen(false)}
+            >
+                <Pressable style={localeStyles.backdrop} onPress={() => setOpen(false)}>
+                    <View style={localeStyles.sheet}>
+                        {LOCALES.map(locale => (
+                            <TouchableOpacity
+                                key={locale.code}
+                                style={[
+                                    localeStyles.option,
+                                    locale.code === currentLocale && localeStyles.optionSelected,
+                                ]}
+                                onPress={() => handleSelect(locale.code)}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={[
+                                    localeStyles.optionText,
+                                    locale.code === currentLocale && localeStyles.optionTextSelected,
+                                ]}>
+                                    {locale.label}
+                                </Text>
+                                {locale.code === currentLocale && (
+                                    <Text style={localeStyles.checkmark}>✓</Text>
+                                )}
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </Pressable>
+            </Modal>
+        </View>
+    )
+}
+
+const localeStyles = StyleSheet.create({
+    container: {
+        gap: spacing.sm,
+    },
+    label: {
+        fontSize: 12,
+        fontWeight: '600',
+        letterSpacing: 0.5,
+        textTransform: 'uppercase',
+        color: colors.muted,
+    },
+    trigger: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderWidth: 1,
+        borderColor: colors.border,
+        borderRadius: radius.md,
+        backgroundColor: colors.bg,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.md,
+    },
+    triggerDisabled: {
+        opacity: 0.5,
+    },
+    triggerText: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: colors.text,
+    },
+    triggerChevron: {
+        fontSize: 14,
+        color: colors.muted,
+    },
+    backdrop: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.35)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: spacing.xl,
+    },
+    sheet: {
+        width: '100%',
+        backgroundColor: colors.surface,
+        borderRadius: radius.card,
+        overflow: 'hidden',
+        ...cardShadow,
+    },
+    option: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.lg,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+    },
+    optionSelected: {
+        backgroundColor: colors.accentLight ?? colors.bg,
+    },
+    optionText: {
+        fontSize: 15,
+        color: colors.text,
+    },
+    optionTextSelected: {
+        fontWeight: '600',
+        color: colors.accent ?? colors.text,
+    },
+    checkmark: {
+        fontSize: 14,
+        color: colors.accent ?? colors.text,
+        fontWeight: '700',
+    },
+})
+
+
+function SavedTestCard({ test, onDelete, locale }: { test: SavedTest; onDelete: () => void; locale: string }) {
     const router = useRouter()
     const [expanded, setExpanded] = useState(false)
     const [numQuestions, setNumQuestions] = useState(String(10))
@@ -46,7 +202,7 @@ function SavedTestCard({ test, onDelete }: { test: SavedTest; onDelete: () => vo
         if (!expanded || species.length > 0) return
         setLoadingSpecies(true)
         fetch(
-            `https://api.inaturalist.org/v1/taxa?id=${test.speciesIds.join(',')}&locale=ca&per_page=${test.speciesIds.length}`
+            `https://api.inaturalist.org/v1/taxa?id=${test.speciesIds.join(',')}&locale=${locale}&per_page=${test.speciesIds.length}`
         )
             .then(r => r.json())
             .then(json => {
@@ -186,9 +342,15 @@ export default function Profile() {
     const [localTests, setLocalTests] = useState<SavedTest[]>(savedTests)
 
     const savedTaxons: SavedTaxon[] = claims?.user_metadata?.saved_taxons ?? []
+    const [locale, setLocale] = useState<string>(claims?.user_metadata?.locale ?? 'ca')
 
     const handleDelete = (savedAt: string) => {
         setLocalTests(prev => prev.filter(t => t.savedAt !== savedAt))
+    }
+
+    const handleLocaleChange = (code: string) => {
+        setLocale(code)
+        router.replace('/profile')
     }
 
     return (
@@ -197,6 +359,8 @@ export default function Profile() {
                 <Card>
                     <Text style={styles.heading}>Hola {username}!</Text>
                     {claims?.email && <Text style={styles.email}>{claims.email}</Text>}
+                    <View style={styles.divider} />
+                    <LocalePicker currentLocale={locale} onChange={handleLocaleChange} />
                     <View style={styles.actions}>
                         <SignOutButton />
                     </View>
@@ -240,7 +404,7 @@ export default function Profile() {
                         <Text style={styles.sectionTitle}>Tests desats</Text>
                         <View style={styles.testList}>
                             {localTests.map((test, i) => (
-                                <SavedTestCard key={test.savedAt} test={test} onDelete={() => handleDelete(test.savedAt)} />
+                                <SavedTestCard key={test.savedAt} test={test} onDelete={() => handleDelete(test.savedAt)} locale={locale} />
                             ))}
                         </View>
                     </View>
@@ -430,5 +594,10 @@ const styles = StyleSheet.create({
     },
     startBtn: {
         marginTop: spacing.xs,
+    },
+    divider: {
+        height: 1,
+        backgroundColor: colors.border,
+        marginVertical: spacing.sm,
     },
 })
