@@ -10,6 +10,7 @@ import {
   rangeError,
   returnName,
 } from '@/lib/utils';
+import { useAuthContext } from '@/hooks/use-auth-context';
 import { colors } from '@/theme/theme';
 
 const DEFAULT_LOCATION: Location = { lat: 41.3874, lng: 2.1686, radius: 40 };
@@ -23,6 +24,8 @@ export default function NewTestForTaxon() {
   const router = useRouter();
   const params = useLocalSearchParams<{ taxon_id: string }>();
   const mode = normalizeId(params.taxon_id);
+  const { claims } = useAuthContext();
+  const locale: string = claims?.user_metadata?.locale ?? 'ca';
 
   const [taxonName, setTaxonName] = useState<string | null>(null);
   const [numQuestions, setNumQuestions] = useState<number | null>(null);
@@ -32,12 +35,12 @@ export default function NewTestForTaxon() {
   useEffect(() => {
     setTaxonName(null);
     fetch(
-      `https://api.inaturalist.org/v1/taxa?id=${mode}&locale=ca&per_page=1`,
+      `https://api.inaturalist.org/v1/taxa?id=${mode}&locale=${locale}&per_page=1`,
     )
       .then((r) => r.json())
       .then((json) => setTaxonName(returnName(json.results[0])))
       .catch(console.error);
-  }, [mode]);
+  }, [mode, locale]);
 
   function start() {
     router.push({

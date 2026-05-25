@@ -45,8 +45,10 @@ function useDelayRequest<T extends (...args: any[]) => void>(
 
 export default function SpeciesSearchScreen({
     onSelect,
+    locale = 'ca',
 }: {
     onSelect: (species: Taxon[]) => void;
+    locale?: string;
 }) {
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<Taxon[]>([]);
@@ -63,9 +65,7 @@ export default function SpeciesSearchScreen({
 
         try {
             const res = await fetch(
-                `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(
-                    text
-                )}&locale=cat&rank=species`,
+                `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(text)}&locale=${locale}&rank=species`,
                 { headers: { Accept: "application/json" } }
             );
 

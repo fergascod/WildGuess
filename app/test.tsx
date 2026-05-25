@@ -371,8 +371,6 @@ function Results({
             onPress={onRestart}
             style={styles.actionBtn}
           />
-          {/* Display save button only if user is logged in 
-          and speciesList is available */}
           {(isLoggedIn && speciesList.length > 0) && <Button
             label="💾 Guarda el test"
             variant="secondary"
@@ -447,6 +445,8 @@ export default function Test() {
     lng?: string;
     radius?: string;
   }>();
+  const { claims } = useAuthContext();
+  const locale: string = claims?.user_metadata?.locale ?? 'ca';
 
   const customSpeciesIds = useMemo(
     () => parseIdList(first(params.species)),
@@ -491,12 +491,12 @@ export default function Test() {
       return;
     }
     fetch(
-      `https://api.inaturalist.org/v1/taxa?id=${taxonId}&locale=ca&per_page=1`,
+      `https://api.inaturalist.org/v1/taxa?id=${taxonId}&locale=${locale}&per_page=1`,
     )
       .then((r) => r.json())
       .then((json) => setTaxonName(returnName(json.results[0])))
       .catch(console.error);
-  }, [taxonId, isCustomTest]);
+  }, [taxonId, isCustomTest, locale]);
 
   /* Fetch species pool */
   useEffect(() => {
@@ -508,7 +508,7 @@ export default function Test() {
       fetch(
         `https://api.inaturalist.org/v1/taxa?id=${customSpeciesIds.join(
           ',',
-        )}&locale=ca&per_page=${customSpeciesIds.length}`,
+        )}&locale=${locale}&per_page=${customSpeciesIds.length}`,
       )
         .then((r) => r.json())
         .then((json) =>
@@ -525,7 +525,7 @@ export default function Test() {
     }
 
     fetch(
-      `https://api.inaturalist.org/v1/observations/species_counts?taxon_id=${taxonId}&lat=${coords.lat}&lng=${coords.lng}&radius=${coords.radius}&per_page=${numSpecies}&locale=ca`,
+      `https://api.inaturalist.org/v1/observations/species_counts?taxon_id=${taxonId}&lat=${coords.lat}&lng=${coords.lng}&radius=${coords.radius}&per_page=${numSpecies}&locale=${locale}`,
     )
       .then((r) => r.json())
       .then((json) =>
@@ -539,7 +539,7 @@ export default function Test() {
       )
       .catch(console.error);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [taxonId, numSpecies, coords.lat, coords.lng, coords.radius, isCustomTest, customSpeciesIds]);
+  }, [taxonId, numSpecies, coords.lat, coords.lng, coords.radius, isCustomTest, customSpeciesIds, locale]);
 
   const generateQuestion = useCallback(() => {
     const d = dataRef.current;
@@ -567,8 +567,6 @@ export default function Test() {
       .then((json) => {
         const results: any[] = json.results ?? [];
         const obs = results[Math.floor(Math.random() * results.length)];
-        // No observations / no photo for this species: show a "no data"
-        // state instead of crashing on a missing dereference.
         setQuestion({
           url: obs?.photos?.[0] ?? null,
           species: options,
@@ -661,7 +659,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: colors.muted,
-    textAlign: 'center',
+    fontStyle: 'italic',
   },
   cardHeader: {
     paddingVertical: spacing.lg,
@@ -775,7 +773,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '90%',
   },
-  /* results */
   resultsPage: {
     backgroundColor: colors.bg,
     padding: spacing.xl,

@@ -179,7 +179,7 @@ interface SearchResult {
   matched_term: string;
 }
 
-function TaxonSearch({ onClose }: { onClose: () => void }) {
+function TaxonSearch({ onClose, locale }: { onClose: () => void; locale: string }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -191,7 +191,7 @@ function TaxonSearch({ onClose }: { onClose: () => void }) {
     setLoading(true);
     try {
       const res = await fetch(
-        `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(text)}&locale=ca&per_page=10`,
+        `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(text)}&locale=${locale}&per_page=10`,
         { headers: { Accept: 'application/json' } },
       );
       const data = await res.json();
@@ -270,7 +270,7 @@ function TaxonSearch({ onClose }: { onClose: () => void }) {
   );
 }
 
-function TaxonSidebar({ taxa, wide }: { taxa: ChildTaxon[]; wide: boolean }) {
+function TaxonSidebar({ taxa, wide, locale }: { taxa: ChildTaxon[]; wide: boolean; locale: string }) {
   const [searching, setSearching] = useState(false);
 
   return (
@@ -297,7 +297,7 @@ function TaxonSidebar({ taxa, wide }: { taxa: ChildTaxon[]; wide: boolean }) {
       </View>
 
       {searching ? (
-        <TaxonSearch onClose={() => setSearching(false)} />
+        <TaxonSearch onClose={() => setSearching(false)} locale={locale} />
       ) : taxa.length === 0 ? (
         <Text style={styles.emptyText}>Sense subtaxons</Text>
       ) : (
@@ -328,6 +328,8 @@ function LoadingCard() {
 export default function Taxonomy() {
   const params = useLocalSearchParams<{ taxon_id: string }>();
   const taxonId = normalizeId(params.taxon_id);
+  const { claims } = useAuthContext();
+  const locale: string = claims?.user_metadata?.locale ?? 'ca';
 
   const [data, setData] = useState<TaxonData | null>(null);
   const [children, setChildren] = useState<ChildTaxon[] | null>(null);
@@ -340,19 +342,19 @@ export default function Taxonomy() {
     setChildren(null);
 
     fetch(
-      `https://api.inaturalist.org/v1/taxa?id=${taxonId}&per_page=1&locale=ca`,
+      `https://api.inaturalist.org/v1/taxa?id=${taxonId}&per_page=1&locale=${locale}`,
     )
       .then((r) => r.json())
       .then((json) => setData(parseTaxon(json)))
       .catch(console.error);
 
     fetch(
-      `https://api.inaturalist.org/v1/taxa?parent_id=${taxonId}&per_page=200&locale=ca`,
+      `https://api.inaturalist.org/v1/taxa?parent_id=${taxonId}&per_page=200&locale=${locale}`,
     )
       .then((r) => r.json())
       .then((json) => setChildren(parseChildren(json)))
       .catch(console.error);
-  }, [taxonId]);
+  }, [taxonId, locale]);
 
   return (
     <ScrollView
@@ -366,7 +368,7 @@ export default function Taxonomy() {
           <LoadingCard />
         )}
         {children !== null ? (
-          <TaxonSidebar taxa={children} wide={wide} />
+          <TaxonSidebar taxa={children} wide={wide} locale={locale} />
         ) : (
           <View
             style={[

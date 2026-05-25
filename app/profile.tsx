@@ -25,11 +25,7 @@ type SpeciesInfo = { id: number; name: string }
 const LOCALES = [
     { code: 'ca', label: 'Català' },
     { code: 'es', label: 'Español' },
-    { code: 'en', label: 'English' },
-    { code: 'fr', label: 'Français' },
-    { code: 'de', label: 'Deutsch' },
-    { code: 'pt', label: 'Português' },
-    { code: 'it', label: 'Italiano' },
+    { code: 'en', label: 'English' }
 ]
 
 function LocalePicker({ currentLocale, onChange }: { currentLocale: string; onChange: (code: string) => void }) {
@@ -52,7 +48,7 @@ function LocalePicker({ currentLocale, onChange }: { currentLocale: string; onCh
 
     return (
         <View style={localeStyles.container}>
-            <Text style={localeStyles.label}>Idioma preferit</Text>
+            <Text style={localeStyles.label}>Idioma</Text>
             <TouchableOpacity
                 style={[localeStyles.trigger, saving && localeStyles.triggerDisabled]}
                 onPress={() => !saving && setOpen(true)}
