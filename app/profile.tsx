@@ -142,7 +142,7 @@ const localeStyles = StyleSheet.create({
         padding: spacing.xl,
     },
     sheet: {
-        width: '100%',
+        width: 220,
         backgroundColor: colors.surface,
         borderRadius: radius.card,
         overflow: 'hidden',
@@ -328,6 +328,30 @@ function SavedTestCard({ test, onDelete, locale }: { test: SavedTest; onDelete: 
     )
 }
 
+
+function useTaxonNames(taxons: SavedTaxon[], locale: string): Record<number, string> {
+    const [names, setNames] = useState<Record<number, string>>({})
+
+    useEffect(() => {
+        if (taxons.length === 0) return
+        const ids = taxons.map(t => t.id).join(',')
+        fetch(
+            `https://api.inaturalist.org/v1/taxa?id=${ids}&locale=${locale}&per_page=${taxons.length}`
+        )
+            .then(r => r.json())
+            .then(json => {
+                const result: Record<number, string> = {}
+                for (const t of (json.results ?? [])) {
+                    result[t.id] = t.preferred_common_name ?? t.name ?? String(t.id)
+                }
+                setNames(result)
+            })
+            .catch(console.error)
+    }, [taxons.map(t => t.id).join(','), locale])
+
+    return names
+}
+
 export default function Profile() {
     const { claims, profile, isLoading, isLoggedIn } = useAuthContext()
     const router = useRouter()
@@ -343,6 +367,7 @@ export default function Profile() {
 
     const savedTaxons: SavedTaxon[] = claims?.user_metadata?.saved_taxons ?? []
     const [locale, setLocale] = useState<string>(claims?.user_metadata?.locale ?? 'ca')
+    const taxonNames = useTaxonNames(savedTaxons, locale)
 
     const handleDelete = (savedAt: string) => {
         setLocalTests(prev => prev.filter(t => t.savedAt !== savedAt))
@@ -392,7 +417,7 @@ export default function Profile() {
                                             <Text style={styles.taxonImagePlaceholderText}>?</Text>
                                         </View>
                                     )}
-                                    <Text style={styles.taxonName} numberOfLines={2}>{taxon.name}</Text>
+                                    <Text style={styles.taxonName} numberOfLines={2}>{taxonNames[taxon.id] ?? taxon.name}</Text>
                                 </TouchableOpacity>
                             ))}
                         </ScrollView>
