@@ -365,17 +365,17 @@ export default function Profile() {
     const { locale, setLocale, isSaving } = useLocale()
     const { t } = useTranslation()
 
-    if (isLoading) return null
-    if (!isLoggedIn) return <Redirect href="/login" />
-
-    const username =
-        profile?.username ?? claims?.user_metadata?.username ?? claims?.email
-
     const savedTests: SavedTest[] = claims?.user_metadata?.saved_tests ?? []
     const [localTests, setLocalTests] = useState<SavedTest[]>(savedTests)
 
     const savedTaxons: SavedTaxon[] = claims?.user_metadata?.saved_taxons ?? []
     const taxonNames = useTaxonNames(savedTaxons, locale)
+
+    if (isLoading) return null
+    if (!isLoggedIn) return <Redirect href="/login" />
+
+    const username =
+        profile?.username ?? claims?.user_metadata?.username ?? claims?.email
 
     const handleDelete = (savedAt: string) => {
         setLocalTests(prev => prev.filter(t => t.savedAt !== savedAt))
