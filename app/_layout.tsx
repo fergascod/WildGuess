@@ -1,9 +1,10 @@
-import '@/lib/i18n';
+import i18n from '@/lib/i18n';
 
 import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { I18nextProvider } from 'react-i18next';
 
 import Navbar from '@/components/Navbar';
 import { colors } from '@/theme/theme';
@@ -27,13 +28,15 @@ function RootNavigator() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <LocaleProvider>
-        <SplashScreenController />
-        <RootNavigator />
-        <StatusBar style="auto" />
-      </LocaleProvider>
-    </AuthProvider>
+    <I18nextProvider i18n={i18n}>
+      <AuthProvider>
+        <LocaleProvider>
+          <SplashScreenController />
+          <RootNavigator />
+          <StatusBar style="auto" />
+        </LocaleProvider>
+      </AuthProvider>
+    </I18nextProvider>
   )
 }
 

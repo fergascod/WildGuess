@@ -1,18 +1,19 @@
 import { Link, usePathname } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { colors, navbarHeight, spacing } from '@/theme/theme';
 import { isSupabaseConfigured } from '@/lib/supabase';
 
 import { useAuthContext } from '@/hooks/use-auth-context'
 
-type NavItem = { label: string; href: '/' | '/explore' | '/new_test' | '/profile' | '/login' };
+type NavItem = { labelKey: string; href: '/' | '/explore' | '/new_test' | '/profile' | '/login' };
 
 
 const ITEMS_BASE: NavItem[] = [
-  { label: 'Inici', href: '/' },
-  { label: 'Explora', href: '/explore' },
-  { label: 'Test', href: '/new_test' },
+  { labelKey: 'navbar.home', href: '/' },
+  { labelKey: 'navbar.explore', href: '/explore' },
+  { labelKey: 'navbar.test', href: '/new_test' },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -23,13 +24,14 @@ function isActive(pathname: string, href: string) {
 export default function Navbar() {
   const pathname = usePathname();
   const { claims, isLoggedIn } = useAuthContext()
+  const { t } = useTranslation()
 
 
 
   const authItem = isSupabaseConfigured
     ? isLoggedIn
       ? { label: claims?.user_metadata?.username, href: '/profile' }
-      : { label: 'Login', href: '/login' }
+      : { label: t('navbar.login'), href: '/login' }
     : null
 
 
@@ -43,7 +45,7 @@ export default function Navbar() {
               <Link key={item.href} href={item.href} asChild>
                 <Pressable style={styles.item}>
                   <Text style={[styles.label, active && styles.labelActive]}>
-                    {item.label}
+                    {t(item.labelKey)}
                   </Text>
                 </Pressable>
               </Link>

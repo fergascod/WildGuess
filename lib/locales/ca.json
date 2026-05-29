@@ -1,4 +1,152 @@
 {
+    "common": {
+        "loading": "Carregant…",
+        "km": "km"
+    },
+    "navbar": {
+        "home": "Inici",
+        "explore": "Explora",
+        "test": "Test",
+        "login": "Login"
+    },
+    "auth": {
+        "signOut": "Tanca sessió",
+        "signingOut": "Tancant sessió…"
+    },
+    "home": {
+        "heading": "Benvingut, estàs preparat?",
+        "subtitle": "Identifica la fauna i la flora del teu entorn!",
+        "exploreCta": "🌿  Explora la taxonomia de iNaturalist",
+        "testCta": "🧠  Posa a prova els teus coneixements!",
+        "footerDeveloped": "Desenvolupat per Fernando Gastón",
+        "footerLinkedIn": "LinkedIn",
+        "footerGitHub": "GitHub"
+    },
+    "login": {
+        "title": "Login",
+        "email": "Email",
+        "password": "Contrasenya",
+        "emailRequired": "Cal un email",
+        "emailInvalid": "Email invalid",
+        "passwordRequired": "Cal una contrasenya",
+        "passwordMin": "Mínim 8 caràcters",
+        "button": "Inicia sessió",
+        "buttonLoading": "Iniciant sessió…",
+        "noAccount": "Encara no tens un compte?",
+        "signUp": "Dona't d'alta"
+    },
+    "signup": {
+        "title": "Registre",
+        "heading": "Crea el teu compte",
+        "email": "Email",
+        "username": "Nom d'usuari",
+        "password": "Contrasenya",
+        "emailRequired": "Cal un email",
+        "emailInvalid": "Email invalid",
+        "usernameRequired": "Cal un nom d'usuari",
+        "usernameMin": "Mínim 3 caràcters",
+        "usernamePattern": "Només lletres, números i guions baixos",
+        "passwordRequired": "Cal una contrasenya",
+        "passwordMin": "Mínim 8 caràcters",
+        "button": "Dona't d'alta",
+        "buttonLoading": "Registrant…",
+        "haveAccount": "Ja tens un compte?",
+        "login": "Inicia sessió",
+        "confirmEmail": "Revisa el correu per confirmar el compte."
+    },
+    "explore": {
+        "title": "Explora l'arbre taxonòmic",
+        "paragraph": "Amb aquesta funcionalitat pots estudiar les relacions taxonòmiques entre les diferents espècies que trobaràs a iNaturalist. Des dels fongs fins els peixos passant per les aus i les algues, podràs explorar els ordres, regnes, famílies, gèneres i espècies d'animals que hi ha a la plataforma.",
+        "start": "Comença!"
+    },
+    "taxonomy": {
+        "parentLink": "← Ves al taxó pare",
+        "startTest": "Fes un test d'aquest taxó",
+        "noImage": "Sense imatge disponible",
+        "searchPlaceholder": "Cerca un taxó...",
+        "searchTitle": "Cerca taxó",
+        "subtaxaTitle": "Subtaxons",
+        "emptyResults": "Cap resultat",
+        "noSubtaxa": "Sense subtaxons",
+        "bookmarkAdd": "Desa taxó",
+        "bookmarkRemove": "Elimina dels guardats"
+    },
+    "gameModes": {
+        "fish": "Peixos",
+        "nudibranchs": "Nudibranquis",
+        "butterflies": "Papallones",
+        "birds": "Ocells"
+    },
+    "newTest": {
+        "title": "Nou joc",
+        "questionsLabel": "Número de preguntes",
+        "questionsPlaceholder": "Entre 1 i 20",
+        "speciesLabel": "Número d'espècies",
+        "speciesPlaceholder": "Entre 2 i 100",
+        "modeLabel": "Mode de joc",
+        "modePlaceholder": "Selecciona un mode de joc",
+        "locationLabel": "Zona geogràfica",
+        "start": "Comença",
+        "custom": "Fes un test personalitzat!",
+        "hint": "Aquí pots jugar a identificar espècies dels grups taxonòmics que més t'agradin. Selecciona el nombre d'espècies que vols incloure al test: quantes més n'escullis més difícil serà!"
+    },
+    "newTestTaxon": {
+        "titlePrefix": "Nou joc:",
+        "loading": "carregant...",
+        "hint": "Selecciona la zona geogràfica, el nombre de preguntes i el nombre d'espècies: quantes més espècies escullis més difícil serà!"
+    },
+    "customTest": {
+        "title": "Test personalitzat",
+        "questionsLabel": "Número de preguntes",
+        "questionsPlaceholder": "Entre 1 i 20",
+        "hint": "Selecciona almenys 2 espècies per començar",
+        "start": "Comença"
+    },
+    "test": {
+        "customTitle": "Test personalitzat",
+        "save": {
+            "savedTitle": "✅ Test desat!",
+            "savedSubtitle": "Pots veure'l al teu perfil.",
+            "close": "Tancar",
+            "title": "Desa el test",
+            "subtitle": "Posa-li un nom per identificar-lo al teu perfil.",
+            "namePlaceholder": "Nom del test…",
+            "nameRequired": "Posa un nom al test.",
+            "error": "Error desant el test.",
+            "cancel": "Cancel·lar",
+            "save": "Desa",
+            "saving": "Desant…"
+        },
+        "question": {
+            "noData": "No hi ha dades per a aquest taxó.",
+            "zoomHint": "🔍 Ampliar",
+            "optionsLabel": "De quina espècie és?"
+        },
+        "results": {
+            "completedTitle": "Test completat!",
+            "scorePrefix": "Has encertat",
+            "scoreMiddle": "de",
+            "newTest": "Fes un altre test",
+            "repeatTest": "Repeteix aquest test",
+            "saveTest": "💾 Guarda el test",
+            "answersHeading": "Respostes",
+            "yourAnswer": "La teva resposta"
+        }
+    },
+    "taxaSelector": {
+        "selected": "Espècies seleccionades ({{count}})",
+        "subtitle": "Cerca i selecciona espècies de iNaturalist",
+        "placeholder": "Escriu el nom d'una espècie...",
+        "empty": "Cap resultat",
+        "observationsShort": "obs."
+    },
+    "locationPicker": {
+        "toggleWithLocation": "Zona: {{location}}, {{radius}} km",
+        "toggleEmpty": "Filtra per zona geogràfica",
+        "hintWithLocation": "📍 {{location}} — toca el mapa per canviar",
+        "hintLoading": "Carregant ubicació...",
+        "radiusLabel": "Radi"
+    },
     "profile": {
         "hello": "Hola {{name}}!",
         "language": "Idioma",

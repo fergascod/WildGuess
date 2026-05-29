@@ -1,6 +1,6 @@
 {
-    "Peixos": 47178,
-    "Nudibranquis": 47113,
-    "Papallones": 325,
-    "Ocells": 3
+    "fish": 47178,
+    "nudibranchs": 47113,
+    "butterflies": 325,
+    "birds": 3
 }

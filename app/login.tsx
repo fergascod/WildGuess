@@ -1,5 +1,6 @@
 
 import { Link, Stack, useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, TextInput } from 'react-native'
 import { supabase } from '@/lib/supabase'
 import { useForm, Controller } from 'react-hook-form'
@@ -14,6 +15,7 @@ type FormData = {
 
 export default function LoginScreen() {
     const router = useRouter()
+    const { t } = useTranslation()
     const [loading, setLoading] = useState(false)
     const [authError, setAuthError] = useState<string | null>(null)
 
@@ -39,17 +41,17 @@ export default function LoginScreen() {
 
     return (
         <Screen contentStyle={styles.content}>
-            <Stack.Screen options={{ title: 'Login' }} />
+            <Stack.Screen options={{ title: t('login.title') }} />
             <Card style={styles.card}>
 
 
-                <FormField label="Email" error={errors.email?.message}>
+                <FormField label={t('login.email')} error={errors.email?.message}>
                     <Controller
                         control={control}
                         name="email"
                         rules={{
-                            required: 'Email is required',
-                            pattern: { value: /\S+@\S+\.\S+/, message: 'Invalid email' },
+                            required: t('login.emailRequired'),
+                            pattern: { value: /\S+@\S+\.\S+/, message: t('login.emailInvalid') },
                         }}
                         render={({ field: { onChange, onBlur, value } }) => (
                             <TextInput
@@ -64,13 +66,13 @@ export default function LoginScreen() {
                     />
                 </FormField>
 
-                <FormField label="Password" error={errors.password?.message}>
+                <FormField label={t('login.password')} error={errors.password?.message}>
                     <Controller
                         control={control}
                         name="password"
                         rules={{
-                            required: 'Password is required',
-                            minLength: { value: 8, message: 'At least 8 characters' },
+                            required: t('login.passwordRequired'),
+                            minLength: { value: 8, message: t('login.passwordMin') },
                         }}
                         render={({ field: { onChange, onBlur, value } }) => (
                             <TextInput
@@ -87,14 +89,14 @@ export default function LoginScreen() {
                 {authError && <Text style={styles.error}>{authError}</Text>}
 
                 <Button
-                    label={loading ? 'Logging in…' : 'Log in'}
+                    label={loading ? t('login.buttonLoading') : t('login.button')}
                     onPress={handleSubmit(onSubmit)}
                     disabled={loading}
                 />
 
                 <View style={styles.linkRow}>
-                    <Text style={styles.linkHint}>Encara no tens un compte?</Text>
-                    <Link href="/signup" style={styles.linkText}>Dona't d'alta</Link>
+                    <Text style={styles.linkHint}>{t('login.noAccount')}</Text>
+                    <Link href="/signup" style={styles.linkText}>{t('login.signUp')}</Link>
                 </View>
             </Card>
         </Screen>
