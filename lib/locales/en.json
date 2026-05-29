@@ -14,9 +14,9 @@
         "signingOut": "Signing out…"
     },
     "home": {
-        "heading": "Welcome, ready?",
-        "subtitle": "Identify the fauna and flora around you!",
-        "exploreCta": "🌿  Explore iNaturalist taxonomy",
+        "heading": "Welcome, are you ready?",
+        "subtitle": "Identify the animals and plants around you!",
+        "exploreCta": "🌿  Explore iNaturalist's taxonomy",
         "testCta": "🧠  Test your knowledge!",
         "footerDeveloped": "Developed by Fernando Gaston",
         "footerLinkedIn": "LinkedIn",
@@ -56,7 +56,7 @@
     },
     "explore": {
         "title": "Explore the taxonomic tree",
-        "paragraph": "With this feature you can study the taxonomic relationships between the different species you will find on iNaturalist. From fungi to fish, passing through birds and algae, you can explore the orders, kingdoms, families, genera, and species of animals on the platform.",
+        "paragraph": "With this feature you can study the taxonomic relationships between the different species you will find on iNaturalist. From fungi to fish, passing through birds and algae, you can explore the orders, kingdoms, families, and species on the platform.",
         "start": "Start!"
     },
     "taxonomy": {

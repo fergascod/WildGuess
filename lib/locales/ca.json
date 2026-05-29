@@ -10,8 +10,8 @@
         "login": "Login"
     },
     "auth": {
-        "signOut": "Tanca sessió",
-        "signingOut": "Tancant sessió…"
+        "signOut": "Tanca la sessió",
+        "signingOut": "Tancant la sessió…"
     },
     "home": {
         "heading": "Benvingut, estàs preparat?",
@@ -27,7 +27,7 @@
         "email": "Email",
         "password": "Contrasenya",
         "emailRequired": "Cal un email",
-        "emailInvalid": "Email invalid",
+        "emailInvalid": "Email invàlid",
         "passwordRequired": "Cal una contrasenya",
         "passwordMin": "Mínim 8 caràcters",
         "button": "Inicia sessió",
@@ -42,7 +42,7 @@
         "username": "Nom d'usuari",
         "password": "Contrasenya",
         "emailRequired": "Cal un email",
-        "emailInvalid": "Email invalid",
+        "emailInvalid": "Email invàlid",
         "usernameRequired": "Cal un nom d'usuari",
         "usernameMin": "Mínim 3 caràcters",
         "usernamePattern": "Només lletres, números i guions baixos",
@@ -56,7 +56,7 @@
     },
     "explore": {
         "title": "Explora l'arbre taxonòmic",
-        "paragraph": "Amb aquesta funcionalitat pots estudiar les relacions taxonòmiques entre les diferents espècies que trobaràs a iNaturalist. Des dels fongs fins els peixos passant per les aus i les algues, podràs explorar els ordres, regnes, famílies, gèneres i espècies d'animals que hi ha a la plataforma.",
+        "paragraph": "Amb aquesta funcionalitat pots estudiar les relacions taxonòmiques entre les diferents espècies que trobaràs a iNaturalist. Des dels fongs fins els peixos passant per les aus i les algues, podràs explorar els ordres, regnes, famílies, gèneres i espècies que hi ha a la plataforma.",
         "start": "Comença!"
     },
     "taxonomy": {
