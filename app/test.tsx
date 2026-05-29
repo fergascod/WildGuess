@@ -16,6 +16,7 @@ import {
 import { Button } from '@/components/ui';
 import { returnName } from '@/lib/utils';
 import { useAuthContext } from '@/hooks/use-auth-context'
+import { useLocale } from '@/hooks/use-locale';
 import { supabase } from '@/lib/supabase'
 import { cardShadow, colors, fonts, radius, spacing } from '@/theme/theme';
 
@@ -446,7 +447,7 @@ export default function Test() {
     radius?: string;
   }>();
   const { claims } = useAuthContext();
-  const locale: string = claims?.user_metadata?.locale ?? 'ca';
+  const { locale } = useLocale();
 
   const customSpeciesIds = useMemo(
     () => parseIdList(first(params.species)),

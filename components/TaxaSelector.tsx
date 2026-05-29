@@ -12,6 +12,7 @@ import {
 } from "react-native";
 
 import { cardShadow, colors, fonts, radius, spacing } from "@/theme/theme";
+import { useLocale } from '@/hooks/use-locale';
 
 export interface Taxon {
     id: number;
@@ -45,11 +46,13 @@ function useDelayRequest<T extends (...args: any[]) => void>(
 
 export default function SpeciesSearchScreen({
     onSelect,
-    locale = 'ca',
+    locale,
 }: {
     onSelect: (species: Taxon[]) => void;
     locale?: string;
 }) {
+    const { locale: appLocale } = useLocale();
+    const activeLocale = locale ?? appLocale;
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<Taxon[]>([]);
     const [loading, setLoading] = useState(false);
@@ -65,7 +68,7 @@ export default function SpeciesSearchScreen({
 
         try {
             const res = await fetch(
-                `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(text)}&locale=${locale}&rank=species`,
+                `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(text)}&locale=${activeLocale}&rank=species`,
                 { headers: { Accept: "application/json" } }
             );
 
@@ -76,7 +79,7 @@ export default function SpeciesSearchScreen({
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [activeLocale]);
 
     const delayedFetch = useDelayRequest(fetchSuggestions, 350);
 

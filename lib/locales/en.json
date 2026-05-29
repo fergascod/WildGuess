@@ -1,0 +1,21 @@
+{
+    "profile": {
+        "hello": "Hi {{name}}!",
+        "language": "Language",
+        "saving": "Saving…",
+        "locales": {
+            "ca": "Catalan",
+            "es": "Spanish",
+            "en": "English"
+        },
+        "savedTaxa": "Saved taxa",
+        "savedTests": "Saved tests",
+        "species": "Species",
+        "loadingSpecies": "Loading species…",
+        "numQuestions": "Number of questions",
+        "startTest": "Start test",
+        "speciesCount_one": "{{count}} species",
+        "speciesCount_other": "{{count}} species",
+        "testMeta": "{{speciesCount}} · {{date}}"
+    }
+}

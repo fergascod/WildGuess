@@ -1,0 +1,21 @@
+{
+    "profile": {
+        "hello": "Hola {{name}}!",
+        "language": "Idioma",
+        "saving": "Desant…",
+        "locales": {
+            "ca": "Català",
+            "es": "Español",
+            "en": "English"
+        },
+        "savedTaxa": "Taxons guardats",
+        "savedTests": "Tests desats",
+        "species": "Espècies",
+        "loadingSpecies": "Carregant espècies…",
+        "numQuestions": "Nombre de preguntes",
+        "startTest": "Comença el test",
+        "speciesCount_one": "{{count}} espècie",
+        "speciesCount_other": "{{count}} espècies",
+        "testMeta": "{{speciesCount}} · {{date}}"
+    }
+}

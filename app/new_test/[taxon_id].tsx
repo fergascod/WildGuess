@@ -10,7 +10,7 @@ import {
   rangeError,
   returnName,
 } from '@/lib/utils';
-import { useAuthContext } from '@/hooks/use-auth-context';
+import { useLocale } from '@/hooks/use-locale';
 import { colors } from '@/theme/theme';
 
 const DEFAULT_LOCATION: Location = { lat: 41.3874, lng: 2.1686, radius: 40 };
@@ -24,8 +24,7 @@ export default function NewTestForTaxon() {
   const router = useRouter();
   const params = useLocalSearchParams<{ taxon_id: string }>();
   const mode = normalizeId(params.taxon_id);
-  const { claims } = useAuthContext();
-  const locale: string = claims?.user_metadata?.locale ?? 'ca';
+  const { locale } = useLocale();
 
   const [taxonName, setTaxonName] = useState<string | null>(null);
   const [numQuestions, setNumQuestions] = useState<number | null>(null);

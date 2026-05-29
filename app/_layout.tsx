@@ -1,3 +1,5 @@
+import '@/lib/i18n';
+
 import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';
@@ -6,6 +8,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Navbar from '@/components/Navbar';
 import { colors } from '@/theme/theme';
 import AuthProvider from '@/providers/auth-provider'
+import LocaleProvider from '@/providers/locale-provider'
 import { SplashScreenController } from '@/components/splash-screen-controller'
 
 function RootNavigator() {
@@ -25,9 +28,11 @@ function RootNavigator() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <SplashScreenController />
-      <RootNavigator />
-      <StatusBar style="auto" />
+      <LocaleProvider>
+        <SplashScreenController />
+        <RootNavigator />
+        <StatusBar style="auto" />
+      </LocaleProvider>
     </AuthProvider>
   )
 }

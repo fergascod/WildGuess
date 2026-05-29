@@ -1,0 +1,21 @@
+{
+    "profile": {
+        "hello": "Hola {{name}}!",
+        "language": "Idioma",
+        "saving": "Guardando…",
+        "locales": {
+            "ca": "Catalán",
+            "es": "Español",
+            "en": "Inglés"
+        },
+        "savedTaxa": "Taxones guardados",
+        "savedTests": "Tests guardados",
+        "species": "Especies",
+        "loadingSpecies": "Cargando especies…",
+        "numQuestions": "Número de preguntas",
+        "startTest": "Empezar test",
+        "speciesCount_one": "{{count}} especie",
+        "speciesCount_other": "{{count}} especies",
+        "testMeta": "{{speciesCount}} · {{date}}"
+    }
+}

@@ -17,6 +17,7 @@ import {
 import { Button } from '@/components/ui';
 import { returnName } from '@/lib/utils';
 import { useAuthContext } from '@/hooks/use-auth-context';
+import { useLocale } from '@/hooks/use-locale';
 import { supabase } from '@/lib/supabase';
 import Svg, { Path } from 'react-native-svg';
 import { cardShadow, colors, fonts, radius, spacing } from '@/theme/theme';
@@ -201,7 +202,7 @@ function TaxonSearch({ onClose, locale }: { onClose: () => void; locale: string 
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [locale]);
 
   const handleChangeText = (text: string) => {
     setQuery(text);
@@ -329,7 +330,7 @@ export default function Taxonomy() {
   const params = useLocalSearchParams<{ taxon_id: string }>();
   const taxonId = normalizeId(params.taxon_id);
   const { claims } = useAuthContext();
-  const locale: string = claims?.user_metadata?.locale ?? 'ca';
+  const { locale } = useLocale();
 
   const [data, setData] = useState<TaxonData | null>(null);
   const [children, setChildren] = useState<ChildTaxon[] | null>(null);
