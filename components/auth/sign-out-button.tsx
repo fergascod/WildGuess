@@ -1,9 +1,11 @@
 import { supabase } from '@/lib/supabase'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui'
 
 export default function SignOutButton() {
     const [loading, setLoading] = useState(false)
+    const { t } = useTranslation()
 
     async function handleSignOut() {
         setLoading(true)
@@ -16,7 +18,7 @@ export default function SignOutButton() {
 
     return (
         <Button
-            label={loading ? 'Signing out…' : 'Sign out'}
+            label={loading ? t('auth.signingOut') : t('auth.signOut')}
             onPress={handleSignOut}
             disabled={loading}
         />

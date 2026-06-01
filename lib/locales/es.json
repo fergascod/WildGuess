@@ -1,0 +1,169 @@
+{
+    "common": {
+        "loading": "Cargando…",
+        "km": "km"
+    },
+    "navbar": {
+        "home": "Inicio",
+        "explore": "Explorar",
+        "test": "Test",
+        "login": "Login"
+    },
+    "auth": {
+        "signOut": "Cerrar sesión",
+        "signingOut": "Cerrando sesión…"
+    },
+    "home": {
+        "heading": "Bienvenido, ¿estás listo?",
+        "subtitle": "Identifica la fauna y la flora de tu entorno!",
+        "exploreCta": "🌿  Explora la taxonomía de iNaturalist",
+        "testCta": "🧠  Pon a prueba tus conocimientos!",
+        "footerDeveloped": "Desarrollado por Fernando Gastón",
+        "footerLinkedIn": "LinkedIn",
+        "footerGitHub": "GitHub"
+    },
+    "login": {
+        "title": "Login",
+        "email": "Email",
+        "password": "Contraseña",
+        "emailRequired": "El email es obligatorio",
+        "emailInvalid": "Email inválido",
+        "passwordRequired": "La contraseña es obligatoria",
+        "passwordMin": "Al menos 8 caracteres",
+        "button": "Iniciar sesión",
+        "buttonLoading": "Iniciando sesión…",
+        "noAccount": "Aún no tienes cuenta?",
+        "signUp": "Regístrate"
+    },
+    "signup": {
+        "title": "Registro",
+        "heading": "Crea tu cuenta",
+        "email": "Email",
+        "username": "Nombre de usuario",
+        "password": "Contraseña",
+        "emailRequired": "El email es obligatorio",
+        "emailInvalid": "El email no es válido",
+        "usernameRequired": "El nombre de usuario es obligatorio",
+        "usernameMin": "Al menos 3 carácteres",
+        "usernamePattern": "Solo letras, numeros y guiones bajos",
+        "passwordRequired": "La contraseña es obligatoria",
+        "passwordMin": "Al menos 8 carácteres",
+        "button": "Regístrate",
+        "buttonLoading": "Registrando…",
+        "haveAccount": "Ya tienes cuenta?",
+        "login": "Iniciar sesión",
+        "confirmEmail": "Revisa tu correo para confirmar tu cuenta."
+    },
+    "explore": {
+        "title": "Explora el árbol taxonómico",
+        "paragraph": "Con esta funcionalidad puedes estudiar las relaciones taxonómicas entre las diferentes especies que encontrarás en iNaturalist. Desde los hongos hasta los peces pasando por las aves y las algas, podrós explorar los reinos, familias, géneros y especies que hay en la plataforma.",
+        "start": "Empezar!"
+    },
+    "taxonomy": {
+        "parentLink": "← Ir al taxón padre",
+        "startTest": "Haz un test de este taxón",
+        "noImage": "Sin imagen disponible",
+        "searchPlaceholder": "Buscar un taxón...",
+        "searchTitle": "Buscar taxón",
+        "subtaxaTitle": "Subtaxones",
+        "emptyResults": "Sin resultados",
+        "noSubtaxa": "Sin subtaxones",
+        "bookmarkAdd": "Guardar taxón",
+        "bookmarkRemove": "Quitar de guardados"
+    },
+    "gameModes": {
+        "fish": "Peces",
+        "nudibranchs": "Nudibranquios",
+        "butterflies": "Mariposas",
+        "birds": "Aves"
+    },
+    "newTest": {
+        "title": "Nuevo juego",
+        "questionsLabel": "Número de preguntas",
+        "questionsPlaceholder": "Entre 1 y 20",
+        "speciesLabel": "Número de especies",
+        "speciesPlaceholder": "Entre 2 y 100",
+        "modeLabel": "Modo de juego",
+        "modePlaceholder": "Selecciona un modo de juego",
+        "locationLabel": "Zona geográfica",
+        "start": "Empezar",
+        "custom": "Haz un test personalizado!",
+        "hint": "Aquí puedes jugar a identificar especies de los grupos taxonómicos que más te gusten. Selecciona el número de especies que quieres incluir en el test: cuantas más elijas, más difícil será!"
+    },
+    "newTestTaxon": {
+        "titlePrefix": "Nuevo juego:",
+        "loading": "Cargando...",
+        "hint": "Selecciona la zona geográfica, el número de preguntas y el número de especies: cuantas mas especies elijas, más difícil será!"
+    },
+    "customTest": {
+        "title": "Test personalizado",
+        "questionsLabel": "Número de preguntas",
+        "questionsPlaceholder": "Entre 1 y 20",
+        "hint": "Selecciona al menos 2 especies para empezar",
+        "start": "Empezar"
+    },
+    "test": {
+        "customTitle": "Test personalizado",
+        "save": {
+            "savedTitle": "✅ Test guardado!",
+            "savedSubtitle": "Puedes verlo en tu perfil.",
+            "close": "Cerrar",
+            "title": "Guardar test",
+            "subtitle": "Ponle un nombre para identificarlo en tu perfil.",
+            "namePlaceholder": "Nombre del test…",
+            "nameRequired": "Pon un nombre al test.",
+            "error": "Error al guardar el test.",
+            "cancel": "Cancelar",
+            "save": "Guardar",
+            "saving": "Guardando…"
+        },
+        "question": {
+            "noData": "No hay datos para este taxón.",
+            "zoomHint": "🔍 Ampliar",
+            "optionsLabel": "Qué especie es?"
+        },
+        "results": {
+            "completedTitle": "Test completado!",
+            "scorePrefix": "Has acertado",
+            "scoreMiddle": "de",
+            "newTest": "Haz otro test",
+            "repeatTest": "Repite este test",
+            "saveTest": "💾 Guardar test",
+            "answersHeading": "Respuestas",
+            "yourAnswer": "Tu respuesta"
+        }
+    },
+    "taxaSelector": {
+        "selected": "Especies seleccionadas ({{count}})",
+        "subtitle": "Busca y selecciona especies de iNaturalist",
+        "placeholder": "Escribe el nombre de una especie...",
+        "empty": "Sin resultados",
+        "observationsShort": "obs."
+    },
+    "locationPicker": {
+        "toggleWithLocation": "Zona: {{location}}, {{radius}} km",
+        "toggleEmpty": "Filtrar por zona geográfica",
+        "hintWithLocation": "📍 {{location}} — toca el mapa para cambiar",
+        "hintLoading": "Cargando ubicación...",
+        "radiusLabel": "Radio"
+    },
+    "profile": {
+        "hello": "Hola {{name}}!",
+        "language": "Idioma",
+        "saving": "Guardando…",
+        "locales": {
+            "ca": "Catalán",
+            "es": "Español",
+            "en": "Inglés"
+        },
+        "savedTaxa": "Taxones guardados",
+        "savedTests": "Tests guardados",
+        "species": "Especies",
+        "loadingSpecies": "Cargando especies…",
+        "numQuestions": "Número de preguntas",
+        "startTest": "Empezar test",
+        "speciesCount_one": "{{count}} especie",
+        "speciesCount_other": "{{count}} especies",
+        "testMeta": "{{speciesCount}} · {{date}}"
+    }
+}

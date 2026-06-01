@@ -13,10 +13,13 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui';
 import { returnName } from '@/lib/utils';
 import { useAuthContext } from '@/hooks/use-auth-context';
+import { useLocale } from '@/hooks/use-locale';
+import { getInaturalistLocaleQuery, type SupportedLocale } from '@/lib/locale';
 import { supabase } from '@/lib/supabase';
 import Svg, { Path } from 'react-native-svg';
 import { cardShadow, colors, fonts, radius, spacing } from '@/theme/theme';
@@ -33,19 +36,20 @@ interface ChildTaxon {
 }
 
 function parseTaxon(json: any): TaxonData {
-  const result = json.results[0];
+  const result = Array.isArray(json?.results) ? json.results[0] : undefined;
   return {
     taxon_name: returnName(result),
     parent_id: result.parent_id ?? null,
-    image: result.default_photo ?? null,
+    image: result?.default_photo ?? null,
   };
 }
 
 function parseChildren(json: any): ChildTaxon[] {
-  const n = Math.min(json.total_results, json.per_page);
+  const results = Array.isArray(json?.results) ? json.results : [];
+  const n = Math.min(results.length, json?.per_page ?? results.length);
   return Array.from({ length: n }, (_, i) => ({
-    id: json.results[i].id,
-    name: returnName(json.results[i]),
+    id: results[i].id,
+    name: returnName(results[i]),
   }));
 }
 
@@ -62,6 +66,7 @@ export type SavedTaxon = {
 
 function BookmarkButton({ taxonId, taxonName, imageUrl }: { taxonId: string; taxonName: string; imageUrl: string | null }) {
   const { claims, isLoggedIn } = useAuthContext();
+  const { t } = useTranslation();
   const existing: SavedTaxon[] = claims?.user_metadata?.saved_taxons ?? [];
   const alreadySaved = existing.some(t => String(t.id) === taxonId);
   const [bookmarked, setBookmarked] = useState(alreadySaved);
@@ -93,7 +98,7 @@ function BookmarkButton({ taxonId, taxonName, imageUrl }: { taxonId: string; tax
       disabled={saving}
       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       style={bookmarkStyles.btn}
-      accessibilityLabel={bookmarked ? 'Elimina dels guardats' : 'Desa taxó'}
+      accessibilityLabel={bookmarked ? t('taxonomy.bookmarkRemove') : t('taxonomy.bookmarkAdd')}
     >
       <Svg width={22} height={22} viewBox="0 0 24 24">
         {bookmarked ? (
@@ -122,8 +127,9 @@ const bookmarkStyles = StyleSheet.create({
 });
 
 function TaxonCard({ taxonId, data }: { taxonId: string; data: TaxonData }) {
-  const imageUrl = data.image?.url.replace('square', 'original') ?? null;
+  const imageUrl = data.image?.url.replace('square', 'medium') ?? null;
   const externalUrl = `https://www.inaturalist.org/taxa/${taxonId}` as ExternalPathString;
+  const { t } = useTranslation();
 
   return (
     <View style={[styles.card, styles.mainCard]}>
@@ -137,13 +143,13 @@ function TaxonCard({ taxonId, data }: { taxonId: string; data: TaxonData }) {
       {data.parent_id != null && (
         <Link href={`/explore/${data.parent_id}`} asChild>
           <Pressable>
-            <Text style={styles.parentLink}>← Ves al taxó pare</Text>
+            <Text style={styles.parentLink}>{t('taxonomy.parentLink')}</Text>
           </Pressable>
         </Link>
       )}
 
       <Button
-        label="Fes un test d'aquest taxó"
+        label={t('taxonomy.startTest')}
         href={`/new_test/${taxonId}`}
         style={styles.cta}
       />
@@ -158,7 +164,7 @@ function TaxonCard({ taxonId, data }: { taxonId: string; data: TaxonData }) {
         </View>
       ) : (
         <View style={styles.noImage}>
-          <Text style={styles.noImageText}>Sense imatge disponible</Text>
+          <Text style={styles.noImageText}>{t('taxonomy.noImage')}</Text>
         </View>
       )}
 
@@ -179,19 +185,20 @@ interface SearchResult {
   matched_term: string;
 }
 
-function TaxonSearch({ onClose }: { onClose: () => void }) {
+function TaxonSearch({ onClose, locale }: { onClose: () => void; locale: SupportedLocale }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { t } = useTranslation();
 
   const fetchResults = useCallback(async (text: string) => {
     if (!text.trim()) { setResults([]); return; }
     setLoading(true);
     try {
       const res = await fetch(
-        `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(text)}&locale=ca&per_page=10`,
+        `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(text)}&${getInaturalistLocaleQuery(locale)}&per_page=10`,
         { headers: { Accept: 'application/json' } },
       );
       const data = await res.json();
@@ -201,7 +208,7 @@ function TaxonSearch({ onClose }: { onClose: () => void }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [locale]);
 
   const handleChangeText = (text: string) => {
     setQuery(text);
@@ -219,7 +226,7 @@ function TaxonSearch({ onClose }: { onClose: () => void }) {
       <TextInput
         value={query}
         onChangeText={handleChangeText}
-        placeholder="Cerca un taxó..."
+        placeholder={t('taxonomy.searchPlaceholder')}
         placeholderTextColor={colors.muted}
         autoFocus
         autoCorrect={false}
@@ -264,23 +271,24 @@ function TaxonSearch({ onClose }: { onClose: () => void }) {
         </ScrollView>
       )}
       {!loading && query.trim().length > 0 && results.length === 0 && (
-        <Text style={styles.emptyText}>Cap resultat</Text>
+        <Text style={styles.emptyText}>{t('taxonomy.emptyResults')}</Text>
       )}
     </View>
   );
 }
 
-function TaxonSidebar({ taxa, wide }: { taxa: ChildTaxon[]; wide: boolean }) {
+function TaxonSidebar({ taxa, wide, locale }: { taxa: ChildTaxon[]; wide: boolean; locale: SupportedLocale }) {
   const [searching, setSearching] = useState(false);
+  const { t } = useTranslation();
 
   return (
     <View style={[styles.card, styles.sidebar, wide && styles.sidebarWide]}>
       {/* Header row */}
       <View style={styles.sidebarHeader}>
         {searching ? (
-          <Text style={[styles.sidebarTitle, styles.sidebarTitleRow]}>Cerca taxó</Text>
+          <Text style={[styles.sidebarTitle, styles.sidebarTitleRow]}>{t('taxonomy.searchTitle')}</Text>
         ) : (
-          <Text style={[styles.sidebarTitle, styles.sidebarTitleRow]}>Subtaxons</Text>
+          <Text style={[styles.sidebarTitle, styles.sidebarTitleRow]}>{t('taxonomy.subtaxaTitle')}</Text>
         )}
         <TouchableOpacity
           style={[styles.searchIconBtn, searching && styles.searchIconBtnActive]}
@@ -297,9 +305,9 @@ function TaxonSidebar({ taxa, wide }: { taxa: ChildTaxon[]; wide: boolean }) {
       </View>
 
       {searching ? (
-        <TaxonSearch onClose={() => setSearching(false)} />
+        <TaxonSearch onClose={() => setSearching(false)} locale={locale} />
       ) : taxa.length === 0 ? (
-        <Text style={styles.emptyText}>Sense subtaxons</Text>
+        <Text style={styles.emptyText}>{t('taxonomy.noSubtaxa')}</Text>
       ) : (
         <ScrollView style={styles.sidebarScroll}>
           {taxa.map((child) => (
@@ -328,6 +336,8 @@ function LoadingCard() {
 export default function Taxonomy() {
   const params = useLocalSearchParams<{ taxon_id: string }>();
   const taxonId = normalizeId(params.taxon_id);
+  const { claims } = useAuthContext();
+  const { locale } = useLocale();
 
   const [data, setData] = useState<TaxonData | null>(null);
   const [children, setChildren] = useState<ChildTaxon[] | null>(null);
@@ -340,19 +350,19 @@ export default function Taxonomy() {
     setChildren(null);
 
     fetch(
-      `https://api.inaturalist.org/v1/taxa?id=${taxonId}&per_page=1&locale=ca`,
+      `https://api.inaturalist.org/v1/taxa?id=${taxonId}&per_page=1&${getInaturalistLocaleQuery(locale)}`,
     )
       .then((r) => r.json())
       .then((json) => setData(parseTaxon(json)))
       .catch(console.error);
 
     fetch(
-      `https://api.inaturalist.org/v1/taxa?parent_id=${taxonId}&per_page=200&locale=ca`,
+      `https://api.inaturalist.org/v1/taxa?parent_id=${taxonId}&per_page=200&${getInaturalistLocaleQuery(locale)}`,
     )
       .then((r) => r.json())
       .then((json) => setChildren(parseChildren(json)))
       .catch(console.error);
-  }, [taxonId]);
+  }, [taxonId, locale]);
 
   return (
     <ScrollView
@@ -366,7 +376,7 @@ export default function Taxonomy() {
           <LoadingCard />
         )}
         {children !== null ? (
-          <TaxonSidebar taxa={children} wide={wide} />
+          <TaxonSidebar taxa={children} wide={wide} locale={locale} />
         ) : (
           <View
             style={[

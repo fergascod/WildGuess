@@ -12,10 +12,13 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui';
 import { returnName } from '@/lib/utils';
 import { useAuthContext } from '@/hooks/use-auth-context'
+import { useLocale } from '@/hooks/use-locale';
+import { getInaturalistLocaleQuery } from '@/lib/locale';
 import { supabase } from '@/lib/supabase'
 import { cardShadow, colors, fonts, radius, spacing } from '@/theme/theme';
 
@@ -82,6 +85,7 @@ function SaveTestModal({
   onClose: () => void;
 }) {
   const { claims } = useAuthContext();
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,7 +103,7 @@ function SaveTestModal({
   const handleSave = async () => {
     const trimmed = name.trim();
     if (!trimmed) {
-      setError('Posa un nom al test.');
+      setError(t('test.save.nameRequired'));
       return;
     }
     setSaving(true);
@@ -118,7 +122,7 @@ function SaveTestModal({
       if (supabaseError) throw supabaseError;
       setSaved(true);
     } catch (e: any) {
-      setError(e?.message ?? 'Error desant el test.');
+      setError(e?.message ?? t('test.save.error'));
     } finally {
       setSaving(false);
     }
@@ -130,21 +134,21 @@ function SaveTestModal({
         <View style={saveStyles.dialog}>
           {saved ? (
             <>
-              <Text style={saveStyles.title}>✅ Test desat!</Text>
+              <Text style={saveStyles.title}>{t('test.save.savedTitle')}</Text>
               <Text style={saveStyles.subtitle}>
-                Pots veure'l al teu perfil.
+                {t('test.save.savedSubtitle')}
               </Text>
-              <Button label="Tancar" onPress={onClose} style={saveStyles.btn} />
+              <Button label={t('test.save.close')} onPress={onClose} style={saveStyles.btn} />
             </>
           ) : (
             <>
-              <Text style={saveStyles.title}>Desa el test</Text>
+              <Text style={saveStyles.title}>{t('test.save.title')}</Text>
               <Text style={saveStyles.subtitle}>
-                Posa-li un nom per identificar-lo al teu perfil.
+                {t('test.save.subtitle')}
               </Text>
               <TextInput
                 style={saveStyles.input}
-                placeholder="Nom del test…"
+                placeholder={t('test.save.namePlaceholder')}
                 placeholderTextColor={colors.muted}
                 value={name}
                 onChangeText={setName}
@@ -154,13 +158,13 @@ function SaveTestModal({
               {error && <Text style={saveStyles.error}>{error}</Text>}
               <View style={saveStyles.row}>
                 <Button
-                  label="Cancel·lar"
+                  label={t('test.save.cancel')}
                   variant="secondary"
                   onPress={onClose}
                   style={saveStyles.btn}
                 />
                 <Button
-                  label={saving ? 'Desant…' : 'Desa'}
+                  label={saving ? t('test.save.saving') : t('test.save.save')}
                   onPress={handleSave}
                   style={saveStyles.btn}
                 />
@@ -259,6 +263,7 @@ function Question({
   numQuestions: number;
   handleAnswer: (userResponse: number) => void;
 }) {
+  const { t } = useTranslation();
   const [zoom, setZoom] = useState(false);
   const { width } = useWindowDimensions();
   const wide = width >= 640;
@@ -267,13 +272,13 @@ function Question({
     return (
       <View style={styles.page}>
         <View style={[styles.card, styles.emptyCard]}>
-          <Text style={styles.emptyText}>No hi ha dades per a aquest taxó.</Text>
+          <Text style={styles.emptyText}>{t('test.question.noData')}</Text>
         </View>
       </View>
     );
   }
 
-  const imageUrl = question.url.url.replace('square', 'original');
+  const imageUrl = question.url.url.replace('square', 'medium');
 
   return (
     <ScrollView style={styles.pageScroll} contentContainerStyle={styles.page}>
@@ -297,11 +302,11 @@ function Question({
               style={styles.questionImage}
               resizeMode="cover"
             />
-            <Text style={styles.zoomHint}>🔍 Ampliar</Text>
+            <Text style={styles.zoomHint}>{t('test.question.zoomHint')}</Text>
           </Pressable>
 
           <View style={[styles.options, wide && styles.optionsWide]}>
-            <Text style={styles.optionsLabel}>De quina espècie és?</Text>
+            <Text style={styles.optionsLabel}>{t('test.question.optionsLabel')}</Text>
             {question.species!.map((species, i) => (
               <Pressable
                 key={i}
@@ -336,9 +341,10 @@ function Results({
   numQuestions: number;
   answeredQuestions: AnsweredQuestion[];
   onRestart: () => void;
-  speciesList: string[];
+  speciesList: number[];
 }) {
   const { isLoggedIn } = useAuthContext()
+  const { t } = useTranslation();
 
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [saveModalVisible, setSaveModalVisible] = useState(false);
@@ -349,32 +355,30 @@ function Results({
       <Lightbox uri={activeImage} onClose={() => setActiveImage(null)} />
       <SaveTestModal
         visible={saveModalVisible}
-        speciesIds={speciesList as number[]}
+        speciesIds={speciesList}
         onClose={() => setSaveModalVisible(false)}
       />
 
       <View style={styles.resultsWrap}>
         <View style={styles.resultsScore}>
-          <Text style={styles.resultsScoreTitle}>Test completat!</Text>
+          <Text style={styles.resultsScoreTitle}>{t('test.results.completedTitle')}</Text>
           <Text style={styles.resultsStat}>
-            Has encertat{' '}
-            <Text style={styles.resultsNum}>{points}</Text> de{' '}
+            {t('test.results.scorePrefix')}{' '}
+            <Text style={styles.resultsNum}>{points}</Text> {t('test.results.scoreMiddle')}{' '}
             <Text style={styles.resultsNum}>{numQuestions}</Text> ({pct}%)
           </Text>
         </View>
 
         <View style={styles.resultsActions}>
-          <Button label="Fes un altre test" href="/new_test" style={styles.actionBtn} />
+          <Button label={t('test.results.newTest')} href="/new_test" style={styles.actionBtn} />
           <Button
-            label="Repeteix aquest test"
+            label={t('test.results.repeatTest')}
             variant="secondary"
             onPress={onRestart}
             style={styles.actionBtn}
           />
-          {/* Display save button only if user is logged in 
-          and speciesList is available */}
           {(isLoggedIn && speciesList.length > 0) && <Button
-            label="💾 Guarda el test"
+            label={t('test.results.saveTest')}
             variant="secondary"
             style={styles.actionBtn}
             onPress={() => setSaveModalVisible(true)}
@@ -382,7 +386,7 @@ function Results({
 
         </View>
 
-        <Text style={styles.resultsHeading}>Respostes</Text>
+        <Text style={styles.resultsHeading}>{t('test.results.answersHeading')}</Text>
 
         <View style={styles.resultsGrid}>
           {answeredQuestions.map((item, index) => {
@@ -420,7 +424,7 @@ function Results({
                   {!item.isCorrect && (
                     <>
                       <Text style={styles.resultsItemWrongLabel}>
-                        La teva resposta
+                        {t('test.results.yourAnswer')}
                       </Text>
                       <Text style={styles.resultsItemWrong}>
                         {userAnswerName}
@@ -447,6 +451,9 @@ export default function Test() {
     lng?: string;
     radius?: string;
   }>();
+  const { claims } = useAuthContext();
+  const { locale } = useLocale();
+  const { t } = useTranslation();
 
   const customSpeciesIds = useMemo(
     () => parseIdList(first(params.species)),
@@ -487,16 +494,16 @@ export default function Test() {
   /* Fetch taxon name */
   useEffect(() => {
     if (isCustomTest) {
-      setTaxonName('Test personalitzat');
+      setTaxonName(t('test.customTitle'));
       return;
     }
     fetch(
-      `https://api.inaturalist.org/v1/taxa?id=${taxonId}&locale=ca&per_page=1`,
+      `https://api.inaturalist.org/v1/taxa?id=${taxonId}&${getInaturalistLocaleQuery(locale)}&per_page=1`,
     )
       .then((r) => r.json())
       .then((json) => setTaxonName(returnName(json.results[0])))
       .catch(console.error);
-  }, [taxonId, isCustomTest]);
+  }, [taxonId, isCustomTest, locale, t]);
 
   /* Fetch species pool */
   useEffect(() => {
@@ -508,16 +515,18 @@ export default function Test() {
       fetch(
         `https://api.inaturalist.org/v1/taxa?id=${customSpeciesIds.join(
           ',',
-        )}&locale=ca&per_page=${customSpeciesIds.length}`,
+        )}&${getInaturalistLocaleQuery(locale)}&per_page=${customSpeciesIds.length}`,
       )
         .then((r) => r.json())
         .then((json) =>
           setData({
-            total_results: json.total_results ?? json.results.length,
-            results: json.results.map((taxon: any) => ({
-              ...taxon,
-              observations_count: 1,
-            })),
+            total_results: json.total_results ?? (Array.isArray(json.results) ? json.results.length : 0),
+            results: Array.isArray(json.results)
+              ? json.results.map((taxon: any) => ({
+                  ...taxon,
+                  observations_count: 1,
+                }))
+              : [],
           }),
         )
         .catch(console.error);
@@ -525,21 +534,23 @@ export default function Test() {
     }
 
     fetch(
-      `https://api.inaturalist.org/v1/observations/species_counts?taxon_id=${taxonId}&lat=${coords.lat}&lng=${coords.lng}&radius=${coords.radius}&per_page=${numSpecies}&locale=ca`,
+      `https://api.inaturalist.org/v1/observations/species_counts?taxon_id=${taxonId}&lat=${coords.lat}&lng=${coords.lng}&radius=${coords.radius}&per_page=${numSpecies}&${getInaturalistLocaleQuery(locale)}`,
     )
       .then((r) => r.json())
       .then((json) =>
         setData({
-          total_results: json.total_results,
-          results: json.results.map((row: any) => ({
-            ...row.taxon,
-            observations_count: row.count,
-          })),
+          total_results: json.total_results ?? 0,
+          results: Array.isArray(json.results)
+            ? json.results.map((row: any) => ({
+                ...row.taxon,
+                observations_count: row.count,
+              }))
+            : [],
         }),
       )
       .catch(console.error);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [taxonId, numSpecies, coords.lat, coords.lng, coords.radius, isCustomTest, customSpeciesIds]);
+  }, [taxonId, numSpecies, coords.lat, coords.lng, coords.radius, isCustomTest, customSpeciesIds, locale]);
 
   const generateQuestion = useCallback(() => {
     const d = dataRef.current;
@@ -561,14 +572,12 @@ export default function Test() {
     const correctIdx = Math.floor(Math.random() * numOpts);
 
     fetch(
-      `https://api.inaturalist.org/v1/observations?photo_license=cc-by-nc&taxon_id=${options[correctIdx].id}&quality_grade=research&order=desc&order_by=created_at`,
+      `https://api.inaturalist.org/v1/observations?photo_license=cc-by-nc&taxon_id=${options[correctIdx].id}&quality_grade=research&order=desc&order_by=created_at&${getInaturalistLocaleQuery(locale)}`,
     )
       .then((r) => r.json())
       .then((json) => {
         const results: any[] = json.results ?? [];
         const obs = results[Math.floor(Math.random() * results.length)];
-        // No observations / no photo for this species: show a "no data"
-        // state instead of crashing on a missing dereference.
         setQuestion({
           url: obs?.photos?.[0] ?? null,
           species: options,
@@ -576,7 +585,7 @@ export default function Test() {
         });
       })
       .catch(console.error);
-  }, []);
+  }, [isCustomTest, customSpeciesIds, locale]);
 
   /* Start when data arrives */
   useEffect(() => {
@@ -661,7 +670,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: colors.muted,
-    textAlign: 'center',
+    fontStyle: 'italic',
   },
   cardHeader: {
     paddingVertical: spacing.lg,
@@ -775,7 +784,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '90%',
   },
-  /* results */
   resultsPage: {
     backgroundColor: colors.bg,
     padding: spacing.xl,

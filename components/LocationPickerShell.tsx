@@ -1,6 +1,7 @@
 import { ComponentType, useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import Slider from '@react-native-community/slider';
+import { useTranslation } from 'react-i18next';
 
 import {
   DEFAULT_LAT,
@@ -76,6 +77,7 @@ export default function LocationPickerShell({
   });
   const [locationName, setLocationName] = useState<string | null>(null);
   const located = useRef(false);
+  const { t } = useTranslation();
 
   function updateCoords(lat: number, lng: number) {
     setCoords({ lat, lng });
@@ -113,8 +115,11 @@ export default function LocationPickerShell({
         <Text style={styles.pin}>📍</Text>
         <Text style={styles.toggleLabel} numberOfLines={1}>
           {locationName
-            ? `Zona: ${locationName}, ${radius} km`
-            : 'Filtra per zona geogràfica'}
+            ? t('locationPicker.toggleWithLocation', {
+              location: locationName,
+              radius,
+            })
+            : t('locationPicker.toggleEmpty')}
         </Text>
         <Text style={styles.chevron}>{open ? '▲' : '▼'}</Text>
       </Pressable>
@@ -132,12 +137,12 @@ export default function LocationPickerShell({
 
           <Text style={styles.hint}>
             {locationName
-              ? `📍 ${locationName} — toca el mapa per canviar`
-              : 'Carregant ubicació...'}
+              ? t('locationPicker.hintWithLocation', { location: locationName })
+              : t('locationPicker.hintLoading')}
           </Text>
 
           <View style={styles.radiusRow}>
-            <Text style={styles.radiusLabel}>Radi</Text>
+            <Text style={styles.radiusLabel}>{t('locationPicker.radiusLabel')}</Text>
             <Slider
               style={styles.slider}
               minimumValue={MIN_RADIUS}
@@ -149,7 +154,7 @@ export default function LocationPickerShell({
               maximumTrackTintColor={colors.border}
               thumbTintColor={colors.accent}
             />
-            <Text style={styles.radiusValue}>{radius} km</Text>
+            <Text style={styles.radiusValue}>{radius} {t('common.km')}</Text>
           </View>
         </View>
       )}

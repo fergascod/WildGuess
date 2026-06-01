@@ -1,8 +1,14 @@
 export function returnName(sp: any) {
-  if ('preferred_common_name' in sp) {
-    return `${sp['preferred_common_name']} (${sp['name']})`;
+  if (!sp || typeof sp !== 'object') return '';
+
+  const commonName = sp.preferred_common_name;
+  const scientificName = sp.name;
+
+  if (commonName && scientificName) {
+    return `${commonName} (${scientificName})`;
   }
-  return sp['name'];
+
+  return commonName ?? scientificName ?? '';
 }
 
 export type Bounds = { min: number; max: number };

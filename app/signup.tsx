@@ -1,4 +1,5 @@
 import { Link, Stack, useRouter } from 'expo-router'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, TextInput } from 'react-native'
 import { Button, Card, FormField, Screen, Title, styles as uiStyles } from '@/components/ui'
 import { supabase } from '@/lib/supabase'
@@ -14,6 +15,7 @@ type FormData = {
 
 export default function SignupScreen() {
     const router = useRouter()
+    const { t } = useTranslation()
     const [loading, setLoading] = useState(false)
     const [authError, setAuthError] = useState<string | null>(null)
 
@@ -41,24 +43,24 @@ export default function SignupScreen() {
             return
         }
         if (result.session) router.replace('/')
-        else setAuthError('Check your email to confirm your account.')
+        else setAuthError(t('signup.confirmEmail'))
     }
 
     return (
         <Screen contentStyle={styles.content}>
-            <Stack.Screen options={{ title: 'Sign Up' }} />
+            <Stack.Screen options={{ title: t('signup.title') }} />
             <Card style={styles.card}>
                 <View style={styles.header}>
-                    <Title>Crea el teu compte</Title>
+                    <Title>{t('signup.heading')}</Title>
                 </View>
 
-                <FormField label="Email" error={errors.email?.message}>
+                <FormField label={t('signup.email')} error={errors.email?.message}>
                     <Controller
                         control={control}
                         name="email"
                         rules={{
-                            required: 'Email is required',
-                            pattern: { value: /\S+@\S+\.\S+/, message: 'Invalid email' },
+                            required: t('signup.emailRequired'),
+                            pattern: { value: /\S+@\S+\.\S+/, message: t('signup.emailInvalid') },
                         }}
                         render={({ field: { onChange, onBlur, value } }) => (
                             <TextInput
@@ -73,14 +75,14 @@ export default function SignupScreen() {
                     />
                 </FormField>
 
-                <FormField label="Username" error={errors.username?.message}>
+                <FormField label={t('signup.username')} error={errors.username?.message}>
                     <Controller
                         control={control}
                         name="username"
                         rules={{
-                            required: 'Username is required',
-                            minLength: { value: 3, message: 'At least 3 characters' },
-                            pattern: { value: /^[a-zA-Z0-9_]+$/, message: 'Letters, numbers, underscores only' },
+                            required: t('signup.usernameRequired'),
+                            minLength: { value: 3, message: t('signup.usernameMin') },
+                            pattern: { value: /^[a-zA-Z0-9_]+$/, message: t('signup.usernamePattern') },
                         }}
                         render={({ field: { onChange, onBlur, value } }) => (
                             <TextInput
@@ -94,13 +96,13 @@ export default function SignupScreen() {
                     />
                 </FormField>
 
-                <FormField label="Password" error={errors.password?.message}>
+                <FormField label={t('signup.password')} error={errors.password?.message}>
                     <Controller
                         control={control}
                         name="password"
                         rules={{
-                            required: 'Password is required',
-                            minLength: { value: 8, message: 'At least 8 characters' },
+                            required: t('signup.passwordRequired'),
+                            minLength: { value: 8, message: t('signup.passwordMin') },
                         }}
                         render={({ field: { onChange, onBlur, value } }) => (
                             <TextInput
@@ -117,14 +119,14 @@ export default function SignupScreen() {
                 {authError && <Text style={styles.error}>{authError}</Text>}
 
                 <Button
-                    label={loading ? 'Signing up…' : 'Sign up'}
+                    label={loading ? t('signup.buttonLoading') : t('signup.button')}
                     onPress={handleSubmit(onSubmit)}
                     disabled={loading}
                 />
 
                 <View style={styles.linkRow}>
-                    <Text style={styles.linkHint}>Ja tens un compte?</Text>
-                    <Link href="/login" style={styles.linkText}>Inicia sessió </Link>
+                    <Text style={styles.linkHint}>{t('signup.haveAccount')}</Text>
+                    <Link href="/login" style={styles.linkText}>{t('signup.login')} </Link>
                 </View>
             </Card>
         </Screen>

@@ -1,6 +1,7 @@
 import SpeciesSearchScreen, { Taxon } from "@/components/TaxaSelector";
 import { FormField, Card, NumberInput, Screen, Button, Title } from "@/components/ui";
 import { router } from "expo-router";
+import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from "react";
 import { Text, View, StyleSheet } from "react-native";
 
@@ -8,6 +9,7 @@ import { QUESTION_BOUNDS, rangeError } from '@/lib/utils';
 import { colors, fonts, spacing } from "@/theme/theme";
 
 export default function CustomTest() {
+    const { t } = useTranslation()
     const [speciesList, setSpeciesList] = useState<Taxon[]>([]);
     const [numQuestions, setNumQuestions] = useState<number | null>(null);
 
@@ -29,14 +31,14 @@ export default function CustomTest() {
 
     return (
         <Screen maxWidth={520}>
-            <Title>Test personalitzat</Title>
+            <Title>{t('customTest.title')}</Title>
 
             <Card>
-                <FormField label="Número de preguntes" error={questionsError}>
+                <FormField label={t('customTest.questionsLabel')} error={questionsError}>
                     <NumberInput
                         value={numQuestions == null ? '' : String(numQuestions)}
                         onChangeNumber={setNumQuestions}
-                        placeholder="Entre 1 i 20"
+                        placeholder={t('customTest.questionsPlaceholder')}
                     />
                 </FormField>
             </Card>
@@ -45,11 +47,11 @@ export default function CustomTest() {
 
             {speciesList.length <= 1 && (
                 <Text style={styles.hint}>
-                    Selecciona almenys 2 espècies per començar
+                    {t('customTest.hint')}
                 </Text>
             )}
 
-            <Button label="Comença" onPress={start} disabled={!canStart} />
+            <Button label={t('customTest.start')} onPress={start} disabled={!canStart} />
         </Screen>
     );
 }

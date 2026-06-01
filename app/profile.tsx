@@ -1,9 +1,15 @@
 import SignOutButton from '@/components/auth/sign-out-button'
 import { useAuthContext } from '@/hooks/use-auth-context'
+import { useLocale } from '@/hooks/use-locale'
+import { toDateLocale, type SupportedLocale } from '@/lib/locale'
+import { getInaturalistLocaleQuery } from '@/lib/locale'
+import { useTranslation } from 'react-i18next'
 import { Redirect, useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
 import {
     Image,
+    Modal,
+    Pressable,
     ScrollView,
     StyleSheet,
     Text,
@@ -20,8 +26,162 @@ import { colors, spacing, radius, fonts, cardShadow } from '@/theme/theme'
 
 type SpeciesInfo = { id: number; name: string }
 
-function SavedTestCard({ test, onDelete }: { test: SavedTest; onDelete: () => void }) {
+type LocaleOption = { code: SupportedLocale; labelKey: string }
+
+const LOCALES: LocaleOption[] = [
+    { code: 'ca', labelKey: 'profile.locales.ca' },
+    { code: 'es', labelKey: 'profile.locales.es' },
+    { code: 'en', labelKey: 'profile.locales.en' }
+]
+
+function LocalePicker({
+    currentLocale,
+    onChange,
+    saving,
+}: {
+    currentLocale: SupportedLocale;
+    onChange: (code: SupportedLocale) => void;
+    saving: boolean;
+}) {
+    const [open, setOpen] = useState(false)
+    const { t } = useTranslation()
+    const current = LOCALES.find(l => l.code === currentLocale) ?? LOCALES[0]
+
+    const handleSelect = (code: SupportedLocale) => {
+        setOpen(false)
+        if (code === currentLocale) return
+        onChange(code)
+    }
+
+    return (
+        <View style={localeStyles.container}>
+            <Text style={localeStyles.label}>{t('profile.language')}</Text>
+            <TouchableOpacity
+                style={[localeStyles.trigger, saving && localeStyles.triggerDisabled]}
+                onPress={() => !saving && setOpen(true)}
+                activeOpacity={0.7}
+            >
+                <Text style={localeStyles.triggerText}>
+                    {saving ? t('profile.saving') : t(current.labelKey)}
+                </Text>
+                <Text style={localeStyles.triggerChevron}>▾</Text>
+            </TouchableOpacity>
+
+            <Modal
+                visible={open}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setOpen(false)}
+            >
+                <Pressable style={localeStyles.backdrop} onPress={() => setOpen(false)}>
+                    <View style={localeStyles.sheet}>
+                        {LOCALES.map(locale => (
+                            <TouchableOpacity
+                                key={locale.code}
+                                style={[
+                                    localeStyles.option,
+                                    locale.code === currentLocale && localeStyles.optionSelected,
+                                ]}
+                                onPress={() => handleSelect(locale.code)}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={[
+                                    localeStyles.optionText,
+                                    locale.code === currentLocale && localeStyles.optionTextSelected,
+                                ]}>
+                                    {t(locale.labelKey)}
+                                </Text>
+                                {locale.code === currentLocale && (
+                                    <Text style={localeStyles.checkmark}>✓</Text>
+                                )}
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </Pressable>
+            </Modal>
+        </View>
+    )
+}
+
+const localeStyles = StyleSheet.create({
+    container: {
+        gap: spacing.sm,
+    },
+    label: {
+        fontSize: 12,
+        fontWeight: '600',
+        letterSpacing: 0.5,
+        textTransform: 'uppercase',
+        color: colors.muted,
+    },
+    trigger: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderWidth: 1,
+        borderColor: colors.border,
+        borderRadius: radius.md,
+        backgroundColor: colors.bg,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.md,
+    },
+    triggerDisabled: {
+        opacity: 0.5,
+    },
+    triggerText: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: colors.text,
+    },
+    triggerChevron: {
+        fontSize: 14,
+        color: colors.muted,
+    },
+    backdrop: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.35)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: spacing.xl,
+    },
+    sheet: {
+        width: 220,
+        backgroundColor: colors.surface,
+        borderRadius: radius.card,
+        overflow: 'hidden',
+        ...cardShadow,
+    },
+    option: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.lg,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+    },
+    optionSelected: {
+        backgroundColor: colors.accentLight ?? colors.bg,
+    },
+    optionText: {
+        fontSize: 15,
+        color: colors.text,
+    },
+    optionTextSelected: {
+        fontWeight: '600',
+        color: colors.accent ?? colors.text,
+    },
+    checkmark: {
+        fontSize: 14,
+        color: colors.accent ?? colors.text,
+        fontWeight: '700',
+    },
+})
+
+
+function SavedTestCard({ test, onDelete, locale }: { test: SavedTest; onDelete: () => void; locale: SupportedLocale }) {
     const router = useRouter()
+    const { t } = useTranslation()
     const [expanded, setExpanded] = useState(false)
     const [numQuestions, setNumQuestions] = useState(String(10))
     const [species, setSpecies] = useState<SpeciesInfo[]>([])
@@ -43,10 +203,11 @@ function SavedTestCard({ test, onDelete }: { test: SavedTest; onDelete: () => vo
     }
 
     useEffect(() => {
-        if (!expanded || species.length > 0) return
+        if (!expanded) return
+        setSpecies([])
         setLoadingSpecies(true)
         fetch(
-            `https://api.inaturalist.org/v1/taxa?id=${test.speciesIds.join(',')}&locale=ca&per_page=${test.speciesIds.length}`
+            `https://api.inaturalist.org/v1/taxa?id=${test.speciesIds.join(',')}&${getInaturalistLocaleQuery(locale)}&per_page=${test.speciesIds.length}`
         )
             .then(r => r.json())
             .then(json => {
@@ -63,7 +224,7 @@ function SavedTestCard({ test, onDelete }: { test: SavedTest; onDelete: () => vo
             })
             .catch(console.error)
             .finally(() => setLoadingSpecies(false))
-    }, [expanded])
+    }, [expanded, locale, test.speciesIds.join(',')])
 
     const handleStart = () => {
         const n = parseInt(numQuestions, 10)
@@ -71,6 +232,13 @@ function SavedTestCard({ test, onDelete }: { test: SavedTest; onDelete: () => vo
         const speciesParam = test.speciesIds.join('%2C')
         router.push(`/test?num_questions=${validN}&species=${speciesParam}`)
     }
+
+    const dateText = new Date(test.savedAt).toLocaleDateString(
+        toDateLocale(locale),
+        { day: 'numeric', month: 'short', year: 'numeric' }
+    )
+    const speciesCount = t('profile.speciesCount', { count: test.speciesIds.length })
+    const metaText = t('profile.testMeta', { speciesCount, date: dateText })
 
     return (
         <View style={styles.testCard}>
@@ -82,11 +250,7 @@ function SavedTestCard({ test, onDelete }: { test: SavedTest; onDelete: () => vo
             >
                 <View style={styles.testCardTitles}>
                     <Text style={styles.testName}>{test.name}</Text>
-                    <Text style={styles.testMeta}>
-                        {test.speciesIds.length} espècie{test.speciesIds.length !== 1 ? 's' : ''} · {new Date(test.savedAt).toLocaleDateString('ca-ES', {
-                            day: 'numeric', month: 'short', year: 'numeric',
-                        })}
-                    </Text>
+                    <Text style={styles.testMeta}>{metaText}</Text>
                 </View>
                 <Text style={styles.chevron}>{expanded ? '▲' : '▼'}</Text>
                 <TouchableOpacity
@@ -103,9 +267,9 @@ function SavedTestCard({ test, onDelete }: { test: SavedTest; onDelete: () => vo
             {expanded && (
                 <View style={styles.testCardBody}>
                     {/* Species horizontal scroll */}
-                    <Text style={styles.fieldLabel}>Espècies</Text>
+                    <Text style={styles.fieldLabel}>{t('profile.species')}</Text>
                     {loadingSpecies ? (
-                        <Text style={styles.loadingText}>Carregant espècies…</Text>
+                        <Text style={styles.loadingText}>{t('profile.loadingSpecies')}</Text>
                     ) : (
                         <ScrollView
                             horizontal
@@ -121,7 +285,7 @@ function SavedTestCard({ test, onDelete }: { test: SavedTest; onDelete: () => vo
                     )}
 
                     {/* Number of questions */}
-                    <Text style={styles.fieldLabel}>Nombre de preguntes</Text>
+                    <Text style={styles.fieldLabel}>{t('profile.numQuestions')}</Text>
                     <View style={styles.numRow}>
                         <TouchableOpacity
                             style={styles.numBtn}
@@ -162,7 +326,7 @@ function SavedTestCard({ test, onDelete }: { test: SavedTest; onDelete: () => vo
                     </View>
 
                     <Button
-                        label={`Comença el test`}
+                        label={t('profile.startTest')}
                         onPress={handleStart}
                         style={styles.startBtn}
                     />
@@ -172,9 +336,41 @@ function SavedTestCard({ test, onDelete }: { test: SavedTest; onDelete: () => vo
     )
 }
 
+
+function useTaxonNames(taxons: SavedTaxon[], locale: string): Record<number, string> {
+    const [names, setNames] = useState<Record<number, string>>({})
+
+    useEffect(() => {
+        if (taxons.length === 0) return
+        const ids = taxons.map(t => t.id).join(',')
+        fetch(
+            `https://api.inaturalist.org/v1/taxa?id=${ids}&${getInaturalistLocaleQuery(locale)}&per_page=${taxons.length}`
+        )
+            .then(r => r.json())
+            .then(json => {
+                const result: Record<number, string> = {}
+                for (const t of (json.results ?? [])) {
+                    result[t.id] = t.preferred_common_name ?? t.name ?? String(t.id)
+                }
+                setNames(result)
+            })
+            .catch(console.error)
+    }, [taxons.map(t => t.id).join(','), locale])
+
+    return names
+}
+
 export default function Profile() {
     const { claims, profile, isLoading, isLoggedIn } = useAuthContext()
     const router = useRouter()
+    const { locale, setLocale, isSaving } = useLocale()
+    const { t } = useTranslation()
+
+    const savedTests: SavedTest[] = claims?.user_metadata?.saved_tests ?? []
+    const [localTests, setLocalTests] = useState<SavedTest[]>(savedTests)
+
+    const savedTaxons: SavedTaxon[] = claims?.user_metadata?.saved_taxons ?? []
+    const taxonNames = useTaxonNames(savedTaxons, locale)
 
     if (isLoading) return null
     if (!isLoggedIn) return <Redirect href="/login" />
@@ -182,21 +378,22 @@ export default function Profile() {
     const username =
         profile?.username ?? claims?.user_metadata?.username ?? claims?.email
 
-    const savedTests: SavedTest[] = claims?.user_metadata?.saved_tests ?? []
-    const [localTests, setLocalTests] = useState<SavedTest[]>(savedTests)
-
-    const savedTaxons: SavedTaxon[] = claims?.user_metadata?.saved_taxons ?? []
-
     const handleDelete = (savedAt: string) => {
         setLocalTests(prev => prev.filter(t => t.savedAt !== savedAt))
+    }
+
+    const handleLocaleChange = (code: SupportedLocale) => {
+        setLocale(code)
     }
 
     return (
         <Screen>
             <ScrollView contentContainerStyle={styles.scroll}>
                 <Card>
-                    <Text style={styles.heading}>Hola {username}!</Text>
+                    <Text style={styles.heading}>{t('profile.hello', { name: username })}</Text>
                     {claims?.email && <Text style={styles.email}>{claims.email}</Text>}
+                    <View style={styles.divider} />
+                    <LocalePicker currentLocale={locale} onChange={handleLocaleChange} saving={isSaving} />
                     <View style={styles.actions}>
                         <SignOutButton />
                     </View>
@@ -204,7 +401,7 @@ export default function Profile() {
 
                 {savedTaxons.length > 0 && (
                     <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Taxons guardats</Text>
+                        <Text style={styles.sectionTitle}>{t('profile.savedTaxa')}</Text>
                         <ScrollView
                             horizontal
                             showsHorizontalScrollIndicator={false}
@@ -228,7 +425,7 @@ export default function Profile() {
                                             <Text style={styles.taxonImagePlaceholderText}>?</Text>
                                         </View>
                                     )}
-                                    <Text style={styles.taxonName} numberOfLines={2}>{taxon.name}</Text>
+                                    <Text style={styles.taxonName} numberOfLines={2}>{taxonNames[taxon.id] ?? taxon.name}</Text>
                                 </TouchableOpacity>
                             ))}
                         </ScrollView>
@@ -237,10 +434,10 @@ export default function Profile() {
 
                 {localTests.length > 0 && (
                     <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Tests desats</Text>
+                        <Text style={styles.sectionTitle}>{t('profile.savedTests')}</Text>
                         <View style={styles.testList}>
                             {localTests.map((test, i) => (
-                                <SavedTestCard key={test.savedAt} test={test} onDelete={() => handleDelete(test.savedAt)} />
+                                <SavedTestCard key={test.savedAt} test={test} onDelete={() => handleDelete(test.savedAt)} locale={locale} />
                             ))}
                         </View>
                     </View>
@@ -430,5 +627,10 @@ const styles = StyleSheet.create({
     },
     startBtn: {
         marginTop: spacing.xs,
+    },
+    divider: {
+        height: 1,
+        backgroundColor: colors.border,
+        marginVertical: spacing.sm,
     },
 })

@@ -1,5 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
 import LocationPicker, { type Location } from '@/components/LocationPicker';
@@ -10,6 +11,8 @@ import {
   rangeError,
   returnName,
 } from '@/lib/utils';
+import { useLocale } from '@/hooks/use-locale';
+import { getInaturalistLocaleQuery } from '@/lib/locale';
 import { colors } from '@/theme/theme';
 
 const DEFAULT_LOCATION: Location = { lat: 41.3874, lng: 2.1686, radius: 40 };
@@ -23,6 +26,8 @@ export default function NewTestForTaxon() {
   const router = useRouter();
   const params = useLocalSearchParams<{ taxon_id: string }>();
   const mode = normalizeId(params.taxon_id);
+  const { locale } = useLocale();
+  const { t } = useTranslation();
 
   const [taxonName, setTaxonName] = useState<string | null>(null);
   const [numQuestions, setNumQuestions] = useState<number | null>(null);
@@ -32,12 +37,12 @@ export default function NewTestForTaxon() {
   useEffect(() => {
     setTaxonName(null);
     fetch(
-      `https://api.inaturalist.org/v1/taxa?id=${mode}&locale=ca&per_page=1`,
+      `https://api.inaturalist.org/v1/taxa?id=${mode}&${getInaturalistLocaleQuery(locale)}&per_page=1`,
     )
       .then((r) => r.json())
       .then((json) => setTaxonName(returnName(json.results[0])))
       .catch(console.error);
-  }, [mode]);
+  }, [mode, locale]);
 
   function start() {
     router.push({
@@ -64,43 +69,40 @@ export default function NewTestForTaxon() {
   return (
     <Screen maxWidth={520}>
       <Title>
-        Nou joc:{' '}
+        {t('newTestTaxon.titlePrefix')}{' '}
         <Text style={styles.titleAccent}>
-          {taxonName ?? 'carregant...'}
+          {taxonName ?? t('newTestTaxon.loading')}
         </Text>
       </Title>
 
       <Card>
-        <FormField label="Número de preguntes" error={questionsError}>
+        <FormField label={t('newTest.questionsLabel')} error={questionsError}>
           <NumberInput
             value={numQuestions == null ? '' : String(numQuestions)}
             onChangeNumber={setNumQuestions}
-            placeholder="Entre 1 i 20"
+            placeholder={t('newTest.questionsPlaceholder')}
           />
         </FormField>
 
-        <FormField label="Número d'espècies" error={speciesError}>
+        <FormField label={t('newTest.speciesLabel')} error={speciesError}>
           <NumberInput
             value={numSpecies == null ? '' : String(numSpecies)}
             onChangeNumber={setNumSpecies}
-            placeholder="Entre 2 i 100"
+            placeholder={t('newTest.speciesPlaceholder')}
           />
         </FormField>
 
-        <FormField label="Zona geogràfica">
+        <FormField label={t('newTest.locationLabel')}>
           <LocationPicker defaultRadius={40} onChange={setLocation} />
         </FormField>
 
         <View style={styles.divider} />
 
-        <Button label="Comença" onPress={start} disabled={!canStart} />
+        <Button label={t('newTest.start')} onPress={start} disabled={!canStart} />
       </Card>
 
       <Card>
-        <Text style={styles.hint}>
-          Selecciona la zona geogràfica, el nombre de preguntes i el nombre
-          d&apos;espècies: quantes més espècies escullis més difícil serà!
-        </Text>
+        <Text style={styles.hint}>{t('newTestTaxon.hint')}</Text>
       </Card>
     </Screen>
   );

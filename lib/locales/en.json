@@ -1,0 +1,169 @@
+{
+    "common": {
+        "loading": "Loading…",
+        "km": "km"
+    },
+    "navbar": {
+        "home": "Home",
+        "explore": "Explore",
+        "test": "Test",
+        "login": "Login"
+    },
+    "auth": {
+        "signOut": "Sign out",
+        "signingOut": "Signing out…"
+    },
+    "home": {
+        "heading": "Welcome, are you ready?",
+        "subtitle": "Identify the animals and plants around you!",
+        "exploreCta": "🌿  Explore iNaturalist's taxonomy",
+        "testCta": "🧠  Test your knowledge!",
+        "footerDeveloped": "Developed by Fernando Gaston",
+        "footerLinkedIn": "LinkedIn",
+        "footerGitHub": "GitHub"
+    },
+    "login": {
+        "title": "Login",
+        "email": "Email",
+        "password": "Password",
+        "emailRequired": "Email is required",
+        "emailInvalid": "Invalid email",
+        "passwordRequired": "Password is required",
+        "passwordMin": "At least 8 characters",
+        "button": "Log in",
+        "buttonLoading": "Logging in…",
+        "noAccount": "Don't have an account?",
+        "signUp": "Sign up"
+    },
+    "signup": {
+        "title": "Sign Up",
+        "heading": "Create your account",
+        "email": "Email",
+        "username": "Username",
+        "password": "Password",
+        "emailRequired": "Email is required",
+        "emailInvalid": "Invalid email",
+        "usernameRequired": "Username is required",
+        "usernameMin": "At least 3 characters",
+        "usernamePattern": "Letters, numbers, underscores only",
+        "passwordRequired": "Password is required",
+        "passwordMin": "At least 8 characters",
+        "button": "Sign up",
+        "buttonLoading": "Signing up…",
+        "haveAccount": "Already have an account?",
+        "login": "Log in",
+        "confirmEmail": "Check your email to confirm your account."
+    },
+    "explore": {
+        "title": "Explore the taxonomic tree",
+        "paragraph": "With this feature you can study the taxonomic relationships between the different species you will find on iNaturalist. From fungi to fish, passing through birds and algae, you can explore the orders, kingdoms, families, and species on the platform.",
+        "start": "Start!"
+    },
+    "taxonomy": {
+        "parentLink": "← Go to parent taxon",
+        "startTest": "Take a test for this taxon",
+        "noImage": "No image available",
+        "searchPlaceholder": "Search a taxon...",
+        "searchTitle": "Search taxon",
+        "subtaxaTitle": "Subtaxa",
+        "emptyResults": "No results",
+        "noSubtaxa": "No subtaxa",
+        "bookmarkAdd": "Save taxon",
+        "bookmarkRemove": "Remove from saved"
+    },
+    "gameModes": {
+        "fish": "Fish",
+        "nudibranchs": "Nudibranchs",
+        "butterflies": "Butterflies",
+        "birds": "Birds"
+    },
+    "newTest": {
+        "title": "New game",
+        "questionsLabel": "Number of questions",
+        "questionsPlaceholder": "Between 1 and 20",
+        "speciesLabel": "Number of species",
+        "speciesPlaceholder": "Between 2 and 100",
+        "modeLabel": "Game mode",
+        "modePlaceholder": "Select a game mode",
+        "locationLabel": "Geographic area",
+        "start": "Start",
+        "custom": "Make a custom test!",
+        "hint": "Here you can play to identify species from the taxonomic groups you like most. Select the number of species you want to include in the test: the more you choose, the harder it will be!"
+    },
+    "newTestTaxon": {
+        "titlePrefix": "New game:",
+        "loading": "loading...",
+        "hint": "Select the geographic area, the number of questions and the number of species: the more species you choose, the harder it will be!"
+    },
+    "customTest": {
+        "title": "Custom test",
+        "questionsLabel": "Number of questions",
+        "questionsPlaceholder": "Between 1 and 20",
+        "hint": "Select at least 2 species to start",
+        "start": "Start"
+    },
+    "test": {
+        "customTitle": "Custom test",
+        "save": {
+            "savedTitle": "✅ Test saved!",
+            "savedSubtitle": "You can view it in your profile.",
+            "close": "Close",
+            "title": "Save test",
+            "subtitle": "Give it a name to identify it in your profile.",
+            "namePlaceholder": "Test name…",
+            "nameRequired": "Please enter a name for the test.",
+            "error": "Error saving the test.",
+            "cancel": "Cancel",
+            "save": "Save",
+            "saving": "Saving…"
+        },
+        "question": {
+            "noData": "No data for this taxon.",
+            "zoomHint": "🔍 Zoom",
+            "optionsLabel": "Which species is it?"
+        },
+        "results": {
+            "completedTitle": "Test completed!",
+            "scorePrefix": "You got",
+            "scoreMiddle": "out of",
+            "newTest": "Take another test",
+            "repeatTest": "Retry this test",
+            "saveTest": "💾 Save test",
+            "answersHeading": "Answers",
+            "yourAnswer": "Your answer"
+        }
+    },
+    "taxaSelector": {
+        "selected": "Selected species ({{count}})",
+        "subtitle": "Search and select species from iNaturalist",
+        "placeholder": "Type a species name...",
+        "empty": "No results",
+        "observationsShort": "obs."
+    },
+    "locationPicker": {
+        "toggleWithLocation": "Area: {{location}}, {{radius}} km",
+        "toggleEmpty": "Filter by geographic area",
+        "hintWithLocation": "📍 {{location}} — tap the map to change",
+        "hintLoading": "Loading location...",
+        "radiusLabel": "Radius"
+    },
+    "profile": {
+        "hello": "Hi {{name}}!",
+        "language": "Language",
+        "saving": "Saving…",
+        "locales": {
+            "ca": "Catalan",
+            "es": "Spanish",
+            "en": "English"
+        },
+        "savedTaxa": "Saved taxa",
+        "savedTests": "Saved tests",
+        "species": "Species",
+        "loadingSpecies": "Loading species…",
+        "numQuestions": "Number of questions",
+        "startTest": "Start test",
+        "speciesCount_one": "{{count}} species",
+        "speciesCount_other": "{{count}} species",
+        "testMeta": "{{speciesCount}} · {{date}}"
+    }
+}

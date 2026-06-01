@@ -1,5 +1,6 @@
 import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -13,6 +14,7 @@ const DEFAULT_LOCATION: Location = { lat: 41.3874, lng: 2.1686, radius: 40 };
 
 export default function NewTest() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [mode, setMode] = useState<string>('');
   const [numQuestions, setNumQuestions] = useState<number | null>(null);
   const [numSpecies, setNumSpecies] = useState<number | null>(null);
@@ -43,26 +45,26 @@ export default function NewTest() {
 
   return (
     <Screen maxWidth={520}>
-      <Title>Nou joc</Title>
+      <Title>{t('newTest.title')}</Title>
 
       <Card>
-        <FormField label="Número de preguntes" error={questionsError}>
+        <FormField label={t('newTest.questionsLabel')} error={questionsError}>
           <NumberInput
             value={numQuestions == null ? '' : String(numQuestions)}
             onChangeNumber={setNumQuestions}
-            placeholder="Entre 1 i 20"
+            placeholder={t('newTest.questionsPlaceholder')}
           />
         </FormField>
 
-        <FormField label="Número d'espècies" error={speciesError}>
+        <FormField label={t('newTest.speciesLabel')} error={speciesError}>
           <NumberInput
             value={numSpecies == null ? '' : String(numSpecies)}
             onChangeNumber={setNumSpecies}
-            placeholder="Entre 2 i 100"
+            placeholder={t('newTest.speciesPlaceholder')}
           />
         </FormField>
 
-        <FormField label="Mode de joc">
+        <FormField label={t('newTest.modeLabel')}>
           <Picker
             selectedValue={mode}
             onValueChange={(v) => setMode(String(v))}
@@ -70,28 +72,26 @@ export default function NewTest() {
             dropdownIconColor={colors.muted}
             mode="dropdown"
           >
-            <Picker.Item label="Selecciona un mode de joc" value="" />
+            <Picker.Item label={t('newTest.modePlaceholder')} value="" />
             {Object.entries(gameModes).map(([name, id]) => (
-              <Picker.Item key={id} label={name} value={String(id)} />
+              <Picker.Item key={id} label={t(`gameModes.${name}`)} value={String(id)} />
             ))}
           </Picker>
         </FormField>
 
-        <FormField label="Zona geogràfica">
+        <FormField label={t('newTest.locationLabel')}>
           <LocationPicker defaultRadius={40} onChange={setLocation} />
         </FormField>
 
         <View style={styles.divider} />
 
-        <Button label="Comença" onPress={start} disabled={!canStart} />
+        <Button label={t('newTest.start')} onPress={start} disabled={!canStart} />
       </Card>
-      <Button label="Fes un test personalitzat!" onPress={() => router.push('/new_test/custom_test')} />
+      <Button label={t('newTest.custom')} onPress={() => router.push('/new_test/custom_test')} />
 
       <Card style={styles.hintCard}>
         <Text style={styles.hint}>
-          Aquí pots jugar a identificar espècies dels grups taxonòmics que més
-          t&apos;agradin. Selecciona el nombre d&apos;espècies que vols incloure
-          al test: quantes més n&apos;escullis més difícil serà!
+          {t('newTest.hint')}
         </Text>
       </Card>
     </Screen>

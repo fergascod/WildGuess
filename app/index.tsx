@@ -1,25 +1,26 @@
 import { Linking, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { Button, Screen } from '@/components/ui';
 import { colors, fonts, spacing } from '@/theme/theme';
 
 export default function Home() {
+  const { t } = useTranslation();
+
   return (
     <Screen contentStyle={styles.content}>
       <View style={styles.hero}>
-        <Text style={styles.heading}>Benvingut, estàs preparat?</Text>
-        <Text style={styles.subtitle}>
-          Identifica la fauna i la flora del teu entorn!
-        </Text>
+        <Text style={styles.heading}>{t('home.heading')}</Text>
+        <Text style={styles.subtitle}>{t('home.subtitle')}</Text>
       </View>
 
       <View style={styles.actions}>
         <Button
-          label="🌿  Explora la taxonomia de iNaturalist"
+          label={t('home.exploreCta')}
           href="/explore/1"
         />
         <Button
-          label="🧠  Posa a prova els teus coneixements!"
+          label={t('home.testCta')}
           variant="secondary"
           href="/new_test"
         />
@@ -27,20 +28,20 @@ export default function Home() {
 
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Desenvolupat per Fernando Gastón</Text>
+        <Text style={styles.footerText}>{t('home.footerDeveloped')}</Text>
         <Text
           style={styles.footerLink}
           onPress={() =>
             Linking.openURL('https://www.linkedin.com/in/fernando-gaston/')
           }
         >
-          LinkedIn
+          {t('home.footerLinkedIn')}
         </Text>
         <Text
           style={styles.footerLink}
           onPress={() => Linking.openURL('https://github.com/fergascod')}
         >
-          GitHub
+          {t('home.footerGitHub')}
         </Text>
       </View>
     </Screen>

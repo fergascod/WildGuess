@@ -10,8 +10,11 @@ import {
     StyleSheet,
     ActivityIndicator,
 } from "react-native";
+import { useTranslation } from 'react-i18next';
 
 import { cardShadow, colors, fonts, radius, spacing } from "@/theme/theme";
+import { useLocale } from '@/hooks/use-locale';
+import { getInaturalistLocaleQuery } from '@/lib/locale';
 
 export interface Taxon {
     id: number;
@@ -45,9 +48,14 @@ function useDelayRequest<T extends (...args: any[]) => void>(
 
 export default function SpeciesSearchScreen({
     onSelect,
+    locale,
 }: {
     onSelect: (species: Taxon[]) => void;
+    locale?: string;
 }) {
+    const { locale: appLocale } = useLocale();
+    const activeLocale = locale ?? appLocale;
+    const { t } = useTranslation();
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<Taxon[]>([]);
     const [loading, setLoading] = useState(false);
@@ -63,9 +71,7 @@ export default function SpeciesSearchScreen({
 
         try {
             const res = await fetch(
-                `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(
-                    text
-                )}&locale=cat&rank=species`,
+                `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(text)}&${getInaturalistLocaleQuery(activeLocale)}&rank=species`,
                 { headers: { Accept: "application/json" } }
             );
 
@@ -76,7 +82,7 @@ export default function SpeciesSearchScreen({
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [activeLocale]);
 
     const delayedFetch = useDelayRequest(fetchSuggestions, 350);
 
@@ -136,7 +142,7 @@ export default function SpeciesSearchScreen({
                         <Text style={styles.metaText}>{item.rank}</Text>
                         <Text style={styles.metaDot}>•</Text>
                         <Text style={styles.metaText}>
-                            {item.observations_count.toLocaleString()} obs.
+                            {item.observations_count.toLocaleString()} {t('taxaSelector.observationsShort')}
                         </Text>
                     </View>
                 </View>
@@ -184,7 +190,7 @@ export default function SpeciesSearchScreen({
             {selected.length > 0 && (
                 <View style={styles.selectionSection}>
                     <Text style={styles.selectionTitle}>
-                        Espècies seleccionades ({selected.length})
+                        {t('taxaSelector.selected', { count: selected.length })}
                     </Text>
 
                     <ScrollView
@@ -201,13 +207,13 @@ export default function SpeciesSearchScreen({
             {/* Search card */}
             <View style={styles.searchCard}>
                 <Text style={styles.subtitle}>
-                    Cerca i selecciona espècies de iNaturalist
+                    {t('taxaSelector.subtitle')}
                 </Text>
 
                 <TextInput
                     value={query}
                     onChangeText={handleChangeText}
-                    placeholder="Escriu el nom d'una espècie..."
+                    placeholder={t('taxaSelector.placeholder')}
                     placeholderTextColor={colors.muted}
                     returnKeyType="search"
                     autoCorrect={false}
@@ -236,7 +242,7 @@ export default function SpeciesSearchScreen({
                                         : styles.resultsList
                                 }
                                 ListEmptyComponent={
-                                    <Text style={styles.emptyText}>Cap resultat</Text>
+                                    <Text style={styles.emptyText}>{t('taxaSelector.empty')}</Text>
                                 }
                             />
                         )}
