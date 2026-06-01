@@ -278,7 +278,7 @@ function Question({
     );
   }
 
-  const imageUrl = question.url.url.replace('square', 'original');
+  const imageUrl = question.url.url.replace('square', 'medium');
 
   return (
     <ScrollView style={styles.pageScroll} contentContainerStyle={styles.page}>
@@ -341,7 +341,7 @@ function Results({
   numQuestions: number;
   answeredQuestions: AnsweredQuestion[];
   onRestart: () => void;
-  speciesList: string[];
+  speciesList: number[];
 }) {
   const { isLoggedIn } = useAuthContext()
   const { t } = useTranslation();
@@ -355,7 +355,7 @@ function Results({
       <Lightbox uri={activeImage} onClose={() => setActiveImage(null)} />
       <SaveTestModal
         visible={saveModalVisible}
-        speciesIds={speciesList as number[]}
+        speciesIds={speciesList}
         onClose={() => setSaveModalVisible(false)}
       />
 
@@ -520,11 +520,13 @@ export default function Test() {
         .then((r) => r.json())
         .then((json) =>
           setData({
-            total_results: json.total_results ?? json.results.length,
-            results: json.results.map((taxon: any) => ({
-              ...taxon,
-              observations_count: 1,
-            })),
+            total_results: json.total_results ?? (Array.isArray(json.results) ? json.results.length : 0),
+            results: Array.isArray(json.results)
+              ? json.results.map((taxon: any) => ({
+                  ...taxon,
+                  observations_count: 1,
+                }))
+              : [],
           }),
         )
         .catch(console.error);
@@ -537,11 +539,13 @@ export default function Test() {
       .then((r) => r.json())
       .then((json) =>
         setData({
-          total_results: json.total_results,
-          results: json.results.map((row: any) => ({
-            ...row.taxon,
-            observations_count: row.count,
-          })),
+          total_results: json.total_results ?? 0,
+          results: Array.isArray(json.results)
+            ? json.results.map((row: any) => ({
+                ...row.taxon,
+                observations_count: row.count,
+              }))
+            : [],
         }),
       )
       .catch(console.error);

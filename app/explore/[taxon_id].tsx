@@ -19,7 +19,7 @@ import { Button } from '@/components/ui';
 import { returnName } from '@/lib/utils';
 import { useAuthContext } from '@/hooks/use-auth-context';
 import { useLocale } from '@/hooks/use-locale';
-import { getInaturalistLocaleQuery } from '@/lib/locale';
+import { getInaturalistLocaleQuery, type SupportedLocale } from '@/lib/locale';
 import { supabase } from '@/lib/supabase';
 import Svg, { Path } from 'react-native-svg';
 import { cardShadow, colors, fonts, radius, spacing } from '@/theme/theme';
@@ -36,19 +36,20 @@ interface ChildTaxon {
 }
 
 function parseTaxon(json: any): TaxonData {
-  const result = json.results[0];
+  const result = Array.isArray(json?.results) ? json.results[0] : undefined;
   return {
     taxon_name: returnName(result),
     parent_id: result.parent_id ?? null,
-    image: result.default_photo ?? null,
+    image: result?.default_photo ?? null,
   };
 }
 
 function parseChildren(json: any): ChildTaxon[] {
-  const n = Math.min(json.total_results, json.per_page);
+  const results = Array.isArray(json?.results) ? json.results : [];
+  const n = Math.min(results.length, json?.per_page ?? results.length);
   return Array.from({ length: n }, (_, i) => ({
-    id: json.results[i].id,
-    name: returnName(json.results[i]),
+    id: results[i].id,
+    name: returnName(results[i]),
   }));
 }
 
@@ -126,7 +127,7 @@ const bookmarkStyles = StyleSheet.create({
 });
 
 function TaxonCard({ taxonId, data }: { taxonId: string; data: TaxonData }) {
-  const imageUrl = data.image?.url.replace('square', 'original') ?? null;
+  const imageUrl = data.image?.url.replace('square', 'medium') ?? null;
   const externalUrl = `https://www.inaturalist.org/taxa/${taxonId}` as ExternalPathString;
   const { t } = useTranslation();
 
@@ -184,7 +185,7 @@ interface SearchResult {
   matched_term: string;
 }
 
-function TaxonSearch({ onClose, locale }: { onClose: () => void; locale: string }) {
+function TaxonSearch({ onClose, locale }: { onClose: () => void; locale: SupportedLocale }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -276,7 +277,7 @@ function TaxonSearch({ onClose, locale }: { onClose: () => void; locale: string 
   );
 }
 
-function TaxonSidebar({ taxa, wide, locale }: { taxa: ChildTaxon[]; wide: boolean; locale: string }) {
+function TaxonSidebar({ taxa, wide, locale }: { taxa: ChildTaxon[]; wide: boolean; locale: SupportedLocale }) {
   const [searching, setSearching] = useState(false);
   const { t } = useTranslation();
 

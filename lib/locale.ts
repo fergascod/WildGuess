@@ -33,13 +33,14 @@ export function toDateLocale(locale: SupportedLocale): string {
   }
 }
 
-export function getInaturalistPreferredPlaceId(locale: SupportedLocale): number | undefined {
-  return INATURALIST_PREFERRED_PLACE_IDS[locale];
+export function getInaturalistPreferredPlaceId(locale: string | null | undefined): number | undefined {
+  return INATURALIST_PREFERRED_PLACE_IDS[normalizeLocale(locale)];
 }
 
-export function getInaturalistLocaleQuery(locale: SupportedLocale): string {
+export function getInaturalistLocaleQuery(locale: string | null | undefined): string {
   const preferredPlaceId = getInaturalistPreferredPlaceId(locale);
+  const normalizedLocale = normalizeLocale(locale);
   return preferredPlaceId == null
-    ? `locale=${locale}`
-    : `locale=${locale}&preferred_place_id=${preferredPlaceId}`;
+    ? `locale=${normalizedLocale}`
+    : `locale=${normalizedLocale}&preferred_place_id=${preferredPlaceId}`;
 }
