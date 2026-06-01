@@ -18,6 +18,7 @@ import { Button } from '@/components/ui';
 import { returnName } from '@/lib/utils';
 import { useAuthContext } from '@/hooks/use-auth-context'
 import { useLocale } from '@/hooks/use-locale';
+import { getInaturalistLocaleQuery } from '@/lib/locale';
 import { supabase } from '@/lib/supabase'
 import { cardShadow, colors, fonts, radius, spacing } from '@/theme/theme';
 
@@ -497,7 +498,7 @@ export default function Test() {
       return;
     }
     fetch(
-      `https://api.inaturalist.org/v1/taxa?id=${taxonId}&locale=${locale}&per_page=1`,
+      `https://api.inaturalist.org/v1/taxa?id=${taxonId}&${getInaturalistLocaleQuery(locale)}&per_page=1`,
     )
       .then((r) => r.json())
       .then((json) => setTaxonName(returnName(json.results[0])))
@@ -514,7 +515,7 @@ export default function Test() {
       fetch(
         `https://api.inaturalist.org/v1/taxa?id=${customSpeciesIds.join(
           ',',
-        )}&locale=${locale}&per_page=${customSpeciesIds.length}`,
+        )}&${getInaturalistLocaleQuery(locale)}&per_page=${customSpeciesIds.length}`,
       )
         .then((r) => r.json())
         .then((json) =>
@@ -531,7 +532,7 @@ export default function Test() {
     }
 
     fetch(
-      `https://api.inaturalist.org/v1/observations/species_counts?taxon_id=${taxonId}&lat=${coords.lat}&lng=${coords.lng}&radius=${coords.radius}&per_page=${numSpecies}&locale=${locale}`,
+      `https://api.inaturalist.org/v1/observations/species_counts?taxon_id=${taxonId}&lat=${coords.lat}&lng=${coords.lng}&radius=${coords.radius}&per_page=${numSpecies}&${getInaturalistLocaleQuery(locale)}`,
     )
       .then((r) => r.json())
       .then((json) =>
@@ -567,7 +568,7 @@ export default function Test() {
     const correctIdx = Math.floor(Math.random() * numOpts);
 
     fetch(
-      `https://api.inaturalist.org/v1/observations?photo_license=cc-by-nc&taxon_id=${options[correctIdx].id}&quality_grade=research&order=desc&order_by=created_at`,
+      `https://api.inaturalist.org/v1/observations?photo_license=cc-by-nc&taxon_id=${options[correctIdx].id}&quality_grade=research&order=desc&order_by=created_at&${getInaturalistLocaleQuery(locale)}`,
     )
       .then((r) => r.json())
       .then((json) => {
@@ -580,7 +581,7 @@ export default function Test() {
         });
       })
       .catch(console.error);
-  }, []);
+  }, [isCustomTest, customSpeciesIds, locale]);
 
   /* Start when data arrives */
   useEffect(() => {

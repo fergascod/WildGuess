@@ -12,6 +12,7 @@ import {
   returnName,
 } from '@/lib/utils';
 import { useLocale } from '@/hooks/use-locale';
+import { getInaturalistLocaleQuery } from '@/lib/locale';
 import { colors } from '@/theme/theme';
 
 const DEFAULT_LOCATION: Location = { lat: 41.3874, lng: 2.1686, radius: 40 };
@@ -36,7 +37,7 @@ export default function NewTestForTaxon() {
   useEffect(() => {
     setTaxonName(null);
     fetch(
-      `https://api.inaturalist.org/v1/taxa?id=${mode}&locale=${locale}&per_page=1`,
+      `https://api.inaturalist.org/v1/taxa?id=${mode}&${getInaturalistLocaleQuery(locale)}&per_page=1`,
     )
       .then((r) => r.json())
       .then((json) => setTaxonName(returnName(json.results[0])))

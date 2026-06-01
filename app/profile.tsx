@@ -2,6 +2,7 @@ import SignOutButton from '@/components/auth/sign-out-button'
 import { useAuthContext } from '@/hooks/use-auth-context'
 import { useLocale } from '@/hooks/use-locale'
 import { toDateLocale, type SupportedLocale } from '@/lib/locale'
+import { getInaturalistLocaleQuery } from '@/lib/locale'
 import { useTranslation } from 'react-i18next'
 import { Redirect, useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
@@ -206,7 +207,7 @@ function SavedTestCard({ test, onDelete, locale }: { test: SavedTest; onDelete: 
         setSpecies([])
         setLoadingSpecies(true)
         fetch(
-            `https://api.inaturalist.org/v1/taxa?id=${test.speciesIds.join(',')}&locale=${locale}&per_page=${test.speciesIds.length}`
+            `https://api.inaturalist.org/v1/taxa?id=${test.speciesIds.join(',')}&${getInaturalistLocaleQuery(locale)}&per_page=${test.speciesIds.length}`
         )
             .then(r => r.json())
             .then(json => {
@@ -343,7 +344,7 @@ function useTaxonNames(taxons: SavedTaxon[], locale: string): Record<number, str
         if (taxons.length === 0) return
         const ids = taxons.map(t => t.id).join(',')
         fetch(
-            `https://api.inaturalist.org/v1/taxa?id=${ids}&locale=${locale}&per_page=${taxons.length}`
+            `https://api.inaturalist.org/v1/taxa?id=${ids}&${getInaturalistLocaleQuery(locale)}&per_page=${taxons.length}`
         )
             .then(r => r.json())
             .then(json => {

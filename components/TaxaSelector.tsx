@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 
 import { cardShadow, colors, fonts, radius, spacing } from "@/theme/theme";
 import { useLocale } from '@/hooks/use-locale';
+import { getInaturalistLocaleQuery } from '@/lib/locale';
 
 export interface Taxon {
     id: number;
@@ -70,7 +71,7 @@ export default function SpeciesSearchScreen({
 
         try {
             const res = await fetch(
-                `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(text)}&locale=${activeLocale}&rank=species`,
+                `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(text)}&${getInaturalistLocaleQuery(activeLocale)}&rank=species`,
                 { headers: { Accept: "application/json" } }
             );
 

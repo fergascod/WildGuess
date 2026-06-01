@@ -19,6 +19,7 @@ import { Button } from '@/components/ui';
 import { returnName } from '@/lib/utils';
 import { useAuthContext } from '@/hooks/use-auth-context';
 import { useLocale } from '@/hooks/use-locale';
+import { getInaturalistLocaleQuery } from '@/lib/locale';
 import { supabase } from '@/lib/supabase';
 import Svg, { Path } from 'react-native-svg';
 import { cardShadow, colors, fonts, radius, spacing } from '@/theme/theme';
@@ -196,7 +197,7 @@ function TaxonSearch({ onClose, locale }: { onClose: () => void; locale: string 
     setLoading(true);
     try {
       const res = await fetch(
-        `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(text)}&locale=${locale}&per_page=10`,
+        `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(text)}&${getInaturalistLocaleQuery(locale)}&per_page=10`,
         { headers: { Accept: 'application/json' } },
       );
       const data = await res.json();
@@ -348,14 +349,14 @@ export default function Taxonomy() {
     setChildren(null);
 
     fetch(
-      `https://api.inaturalist.org/v1/taxa?id=${taxonId}&per_page=1&locale=${locale}`,
+      `https://api.inaturalist.org/v1/taxa?id=${taxonId}&per_page=1&${getInaturalistLocaleQuery(locale)}`,
     )
       .then((r) => r.json())
       .then((json) => setData(parseTaxon(json)))
       .catch(console.error);
 
     fetch(
-      `https://api.inaturalist.org/v1/taxa?parent_id=${taxonId}&per_page=200&locale=${locale}`,
+      `https://api.inaturalist.org/v1/taxa?parent_id=${taxonId}&per_page=200&${getInaturalistLocaleQuery(locale)}`,
     )
       .then((r) => r.json())
       .then((json) => setChildren(parseChildren(json)))

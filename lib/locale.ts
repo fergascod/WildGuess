@@ -3,6 +3,11 @@ import * as Localization from 'expo-localization';
 export const SUPPORTED_LOCALES = ['ca', 'es', 'en'] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
 
+const INATURALIST_PREFERRED_PLACE_IDS: Partial<Record<SupportedLocale, number>> = {
+  ca: 12997,
+  es: 6774,
+};
+
 export function normalizeLocale(raw?: string | null): SupportedLocale {
   const value = String(raw ?? '').toLowerCase();
   const base = value.split(/[-_]/)[0];
@@ -26,4 +31,15 @@ export function toDateLocale(locale: SupportedLocale): string {
     default:
       return 'en';
   }
+}
+
+export function getInaturalistPreferredPlaceId(locale: SupportedLocale): number | undefined {
+  return INATURALIST_PREFERRED_PLACE_IDS[locale];
+}
+
+export function getInaturalistLocaleQuery(locale: SupportedLocale): string {
+  const preferredPlaceId = getInaturalistPreferredPlaceId(locale);
+  return preferredPlaceId == null
+    ? `locale=${locale}`
+    : `locale=${locale}&preferred_place_id=${preferredPlaceId}`;
 }
