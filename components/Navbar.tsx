@@ -26,9 +26,15 @@ const ITEMS_BASE: NavItem[] = [
   { labelKey: 'navbar.test', href: '/new_test' },
 ];
 
+const TEST_ROUTES = ['/test', '/sound_test'];
+
 function isActive(pathname: string, href: string) {
   if (href === '/') return pathname === '/';
   return pathname === href || pathname.startsWith(href + '/');
+}
+
+function isTestRoute(pathname: string) {
+  return TEST_ROUTES.some((route) => pathname === route || pathname.startsWith(route + '/'));
 }
 
 function LocaleMenu() {
@@ -93,14 +99,11 @@ export default function Navbar() {
   const { claims, isLoggedIn } = useAuthContext()
   const { t } = useTranslation()
 
-
-
   const authItem = isSupabaseConfigured
     ? isLoggedIn
       ? { label: claims?.user_metadata?.username, href: '/profile' }
       : { label: t('navbar.login'), href: '/login' }
     : null
-
 
   return (
     <View style={styles.nav}>
@@ -120,7 +123,7 @@ export default function Navbar() {
           })}
         </View>
         <View style={styles.right}>
-          <LocaleMenu />
+          {!isTestRoute(pathname) && <LocaleMenu />}
           {authItem && (() => {
             const active = isActive(pathname, authItem.href);
             return (
