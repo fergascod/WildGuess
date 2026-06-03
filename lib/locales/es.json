@@ -133,6 +133,10 @@
             "yourAnswer": "Tu respuesta"
         }
     },
+    "sound_test": {
+        "pause": "Pausa",
+        "play": "Reproducir"
+    },
     "taxaSelector": {
         "selected": "Especies seleccionadas ({{count}})",
         "subtitle": "Busca y selecciona especies de iNaturalist",

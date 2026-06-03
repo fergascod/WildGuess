@@ -133,6 +133,10 @@
             "yourAnswer": "La teva resposta"
         }
     },
+    "sound_test": {
+        "pause": "Pausa",
+        "play": "Reproduir"
+    },
     "taxaSelector": {
         "selected": "Espècies seleccionades ({{count}})",
         "subtitle": "Cerca i selecciona espècies de iNaturalist",

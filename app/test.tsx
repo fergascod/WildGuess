@@ -1,5 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -16,64 +15,22 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui';
 import { returnName } from '@/lib/utils';
-import { useAuthContext } from '@/hooks/use-auth-context'
-import { useLocale } from '@/hooks/use-locale';
-import { getInaturalistLocaleQuery } from '@/lib/locale';
-import { supabase } from '@/lib/supabase'
+import { useAuthContext } from '@/hooks/use-auth-context';
+import { supabase } from '@/lib/supabase';
 import { cardShadow, colors, fonts, radius, spacing } from '@/theme/theme';
+import { useState, useEffect } from 'react';
 
-type PhotoInfo = { url: string; attribution?: string };
-type Species = { id: number; observations_count: number;[key: string]: any };
+import {
+  useTestGame,
+  type MediaInfo,
+  type QuestionState,
+  type AnsweredQuestion,
+  type SavedTest,
+} from '@/lib/use-test-game';
 
-interface QuestionState {
-  url: PhotoInfo | null;
-  species: Species[] | null;
-  correct: number | null;
-}
-
-interface AnsweredQuestion {
-  question: QuestionState;
-  userResponse: number;
-  isCorrect: boolean;
-}
-
-function filterZeros(arr: Species[]): Species[] {
-  let n = 1;
-  while (n < arr.length && arr[n].observations_count > 0) n++;
-  return arr.slice(0, n);
-}
-
-function getRandomCombination<T>(arr: T[], k: number): T[] {
-  const tmp = [...arr];
-  const out: T[] = [];
-  for (let i = 0; i < k && tmp.length > 0; i++) {
-    const idx = Math.floor(Math.random() * tmp.length);
-    out.push(tmp[idx]);
-    tmp.splice(idx, 1);
-  }
-  return out;
-}
-
-function first<T>(v: T | T[] | undefined): T | undefined {
-  return Array.isArray(v) ? v[0] : v;
-}
-
-function parseIdList(value: string | undefined): number[] {
-  if (!value) return [];
-  const out = value
-    .split(',')
-    .map((chunk) => chunk.trim())
-    .filter((chunk) => /^\+?(0|[1-9]\d*)$/.test(chunk))
-    .map((chunk) => parseInt(chunk, 10))
-    .filter((id) => id > 0);
-  return Array.from(new Set(out));
-}
-
-export type SavedTest = {
-  name: string;
-  speciesIds: number[];
-  savedAt: string;
-};
+// ---------------------------------------------------------------------------
+// SaveTestModal
+// ---------------------------------------------------------------------------
 
 function SaveTestModal({
   visible,
@@ -91,7 +48,6 @@ function SaveTestModal({
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
-  // Reset state when modal opens
   useEffect(() => {
     if (visible) {
       setName('');
@@ -135,17 +91,13 @@ function SaveTestModal({
           {saved ? (
             <>
               <Text style={saveStyles.title}>{t('test.save.savedTitle')}</Text>
-              <Text style={saveStyles.subtitle}>
-                {t('test.save.savedSubtitle')}
-              </Text>
+              <Text style={saveStyles.subtitle}>{t('test.save.savedSubtitle')}</Text>
               <Button label={t('test.save.close')} onPress={onClose} style={saveStyles.btn} />
             </>
           ) : (
             <>
               <Text style={saveStyles.title}>{t('test.save.title')}</Text>
-              <Text style={saveStyles.subtitle}>
-                {t('test.save.subtitle')}
-              </Text>
+              <Text style={saveStyles.subtitle}>{t('test.save.subtitle')}</Text>
               <TextInput
                 style={saveStyles.input}
                 placeholder={t('test.save.namePlaceholder')}
@@ -202,10 +154,7 @@ const saveStyles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
   },
-  subtitle: {
-    fontSize: 14,
-    color: colors.muted,
-  },
+  subtitle: { fontSize: 14, color: colors.muted },
   input: {
     borderWidth: 1,
     borderColor: colors.border,
@@ -216,39 +165,33 @@ const saveStyles = StyleSheet.create({
     color: colors.text,
     backgroundColor: colors.bg,
   },
-  error: {
-    fontSize: 13,
-    color: colors.wrong,
-  },
+  error: { fontSize: 13, color: colors.wrong },
   row: {
     flexDirection: 'row',
     gap: spacing.md,
     justifyContent: 'flex-end',
     marginTop: spacing.xs,
   },
-  btn: {
-    width: 'auto',
-    paddingHorizontal: spacing.xl,
-  },
+  btn: { width: 'auto', paddingHorizontal: spacing.xl },
 });
 
-function Lightbox({
-  uri,
-  onClose,
-}: {
-  uri: string | null;
-  onClose: () => void;
-}) {
+// ---------------------------------------------------------------------------
+// Lightbox
+// ---------------------------------------------------------------------------
+
+function Lightbox({ uri, onClose }: { uri: string | null; onClose: () => void }) {
   return (
     <Modal visible={!!uri} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.lightboxBackdrop} onPress={onClose}>
-        {uri && (
-          <Image source={{ uri }} style={styles.lightboxImage} resizeMode="contain" />
-        )}
+        {uri && <Image source={{ uri }} style={styles.lightboxImage} resizeMode="contain" />}
       </Pressable>
     </Modal>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Question
+// ---------------------------------------------------------------------------
 
 function Question({
   taxonName,
@@ -268,7 +211,7 @@ function Question({
   const { width } = useWindowDimensions();
   const wide = width >= 640;
 
-  if (!question.url) {
+  if (!question.media) {
     return (
       <View style={styles.page}>
         <View style={[styles.card, styles.emptyCard]}>
@@ -278,7 +221,7 @@ function Question({
     );
   }
 
-  const imageUrl = question.url.url.replace('square', 'medium');
+  const imageUrl = question.media.url.replace('square', 'medium');
 
   return (
     <ScrollView style={styles.pageScroll} contentContainerStyle={styles.page}>
@@ -297,11 +240,7 @@ function Question({
             style={[styles.imageWrap, wide && styles.imageWrapWide]}
             onPress={() => setZoom(true)}
           >
-            <Image
-              source={{ uri: imageUrl }}
-              style={styles.questionImage}
-              resizeMode="cover"
-            />
+            <Image source={{ uri: imageUrl }} style={styles.questionImage} resizeMode="cover" />
             <Text style={styles.zoomHint}>{t('test.question.zoomHint')}</Text>
           </Pressable>
 
@@ -310,10 +249,7 @@ function Question({
             {question.species!.map((species, i) => (
               <Pressable
                 key={i}
-                style={({ pressed }) => [
-                  styles.optionBtn,
-                  pressed && styles.optionBtnPressed,
-                ]}
+                style={({ pressed }) => [styles.optionBtn, pressed && styles.optionBtnPressed]}
                 onPress={() => handleAnswer(i)}
               >
                 <Text style={styles.optionText}>{returnName(species)}</Text>
@@ -322,13 +258,17 @@ function Question({
           </View>
         </View>
 
-        {question.url.attribution && (
-          <Text style={styles.attribution}>{question.url.attribution}</Text>
+        {question.media.attribution && (
+          <Text style={styles.attribution}>{question.media.attribution}</Text>
         )}
       </View>
     </ScrollView>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Results
+// ---------------------------------------------------------------------------
 
 function Results({
   points,
@@ -343,9 +283,8 @@ function Results({
   onRestart: () => void;
   speciesList: number[];
 }) {
-  const { isLoggedIn } = useAuthContext()
+  const { isLoggedIn } = useAuthContext();
   const { t } = useTranslation();
-
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [saveModalVisible, setSaveModalVisible] = useState(false);
   const pct = Math.round((points / numQuestions) * 100);
@@ -377,58 +316,40 @@ function Results({
             onPress={onRestart}
             style={styles.actionBtn}
           />
-          {(isLoggedIn && speciesList.length > 0) && <Button
-            label={t('test.results.saveTest')}
-            variant="secondary"
-            style={styles.actionBtn}
-            onPress={() => setSaveModalVisible(true)}
-          />}
-
+          {isLoggedIn && speciesList.length > 0 && (
+            <Button
+              label={t('test.results.saveTest')}
+              variant="secondary"
+              style={styles.actionBtn}
+              onPress={() => setSaveModalVisible(true)}
+            />
+          )}
         </View>
 
         <Text style={styles.resultsHeading}>{t('test.results.answersHeading')}</Text>
 
         <View style={styles.resultsGrid}>
           {answeredQuestions.map((item, index) => {
-            const imgUrl = item.question.url!.url.replace('square', 'original');
-            const correctName = returnName(
-              item.question.species![item.question.correct!],
-            );
-            const userAnswerName = returnName(
-              item.question.species![item.userResponse],
-            );
+            const imgUrl = item.question.media!.url.replace('square', 'original');
+            const correctName = returnName(item.question.species![item.question.correct!]);
+            const userAnswerName = returnName(item.question.species![item.userResponse]);
             return (
               <View key={index} style={styles.resultsItem}>
                 <Pressable
                   style={styles.resultsItemImgWrap}
                   onPress={() => setActiveImage(imgUrl)}
                 >
-                  <Image
-                    source={{ uri: imgUrl }}
-                    style={styles.resultsItemImg}
-                    resizeMode="cover"
-                  />
-                  <View
-                    style={[
-                      styles.badge,
-                      item.isCorrect ? styles.badgeCorrect : styles.badgeWrong,
-                    ]}
-                  >
-                    <Text style={styles.badgeText}>
-                      {item.isCorrect ? '✓' : '✗'}
-                    </Text>
+                  <Image source={{ uri: imgUrl }} style={styles.resultsItemImg} resizeMode="cover" />
+                  <View style={[styles.badge, item.isCorrect ? styles.badgeCorrect : styles.badgeWrong]}>
+                    <Text style={styles.badgeText}>{item.isCorrect ? '✓' : '✗'}</Text>
                   </View>
                 </Pressable>
                 <View style={styles.resultsItemBody}>
                   <Text style={styles.resultsItemCorrect}>{correctName}</Text>
                   {!item.isCorrect && (
                     <>
-                      <Text style={styles.resultsItemWrongLabel}>
-                        {t('test.results.yourAnswer')}
-                      </Text>
-                      <Text style={styles.resultsItemWrong}>
-                        {userAnswerName}
-                      </Text>
+                      <Text style={styles.resultsItemWrongLabel}>{t('test.results.yourAnswer')}</Text>
+                      <Text style={styles.resultsItemWrong}>{userAnswerName}</Text>
                     </>
                   )}
                 </View>
@@ -441,174 +362,27 @@ function Results({
   );
 }
 
+// ---------------------------------------------------------------------------
+// Screen
+// ---------------------------------------------------------------------------
+
 export default function Test() {
-  const params = useLocalSearchParams<{
-    taxon_id?: string;
-    num_questions?: string;
-    num_species?: string;
-    species?: string;
-    lat?: string;
-    lng?: string;
-    radius?: string;
-  }>();
-  const { claims } = useAuthContext();
-  const { locale } = useLocale();
-  const { t } = useTranslation();
-
-  const customSpeciesIds = useMemo(
-    () => parseIdList(first(params.species)),
-    [params.species],
-  );
-  const isCustomTest = customSpeciesIds.length > 0;
-
-  const taxonId = (() => {
-    const id = first(params.taxon_id);
-    return id && /^\+?(0|[1-9]\d*)$/.test(id) ? id : '1';
-  })();
-  const numQuestions = params.num_questions
-    ? parseInt(first(params.num_questions)!, 10)
-    : 5;
-  const numSpecies = params.num_species
-    ? parseInt(first(params.num_species)!, 10)
-    : 10;
-  const coords = {
-    lat: params.lat ? parseFloat(first(params.lat)!) : 41.3874,
-    lng: params.lng ? parseFloat(first(params.lng)!) : 2.1686,
-    radius: params.radius ? parseInt(first(params.radius)!, 10) : 40,
-  };
-
-  const [taxonName, setTaxonName] = useState('');
-  const [data, setData] = useState<{
-    total_results: number;
-    results: Species[];
-  } | null>(null);
-  const [question, setQuestion] = useState<QuestionState | null>(null);
-  const [questionIndex, setQuestionIndex] = useState(-1);
-  const [points, setPoints] = useState(0);
-  const [answeredQuestions, setAnsweredQuestions] = useState<AnsweredQuestion[]>(
+  const extractMedia = useCallback(
+    (obs: any) => (obs?.photos?.[0] ? { url: obs.photos[0].url, attribution: obs.photos[0].attribution } : null),
     [],
   );
-  const dataRef = useRef(data);
-  dataRef.current = data;
 
-  /* Fetch taxon name */
-  useEffect(() => {
-    if (isCustomTest) {
-      setTaxonName(t('test.customTitle'));
-      return;
-    }
-    fetch(
-      `https://api.inaturalist.org/v1/taxa?id=${taxonId}&${getInaturalistLocaleQuery(locale)}&per_page=1`,
-    )
-      .then((r) => r.json())
-      .then((json) => setTaxonName(returnName(json.results[0])))
-      .catch(console.error);
-  }, [taxonId, isCustomTest, locale, t]);
-
-  /* Fetch species pool */
-  useEffect(() => {
-    if (isCustomTest) {
-      if (customSpeciesIds.length === 0) {
-        setData({ total_results: 0, results: [] });
-        return;
-      }
-      fetch(
-        `https://api.inaturalist.org/v1/taxa?id=${customSpeciesIds.join(
-          ',',
-        )}&${getInaturalistLocaleQuery(locale)}&per_page=${customSpeciesIds.length}`,
-      )
-        .then((r) => r.json())
-        .then((json) =>
-          setData({
-            total_results: json.total_results ?? (Array.isArray(json.results) ? json.results.length : 0),
-            results: Array.isArray(json.results)
-              ? json.results.map((taxon: any) => ({
-                  ...taxon,
-                  observations_count: 1,
-                }))
-              : [],
-          }),
-        )
-        .catch(console.error);
-      return;
-    }
-
-    fetch(
-      `https://api.inaturalist.org/v1/observations/species_counts?taxon_id=${taxonId}&lat=${coords.lat}&lng=${coords.lng}&radius=${coords.radius}&per_page=${numSpecies}&${getInaturalistLocaleQuery(locale)}`,
-    )
-      .then((r) => r.json())
-      .then((json) =>
-        setData({
-          total_results: json.total_results ?? 0,
-          results: Array.isArray(json.results)
-            ? json.results.map((row: any) => ({
-                ...row.taxon,
-                observations_count: row.count,
-              }))
-            : [],
-        }),
-      )
-      .catch(console.error);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [taxonId, numSpecies, coords.lat, coords.lng, coords.radius, isCustomTest, customSpeciesIds, locale]);
-
-  const generateQuestion = useCallback(() => {
-    const d = dataRef.current;
-    if (!d) return;
-    setQuestionIndex((i) => i + 1);
-
-    if (d.total_results === 0) {
-      setQuestion({ url: null, species: null, correct: null });
-      return;
-    }
-
-    const species = isCustomTest ? d.results : filterZeros(d.results);
-    const numOpts = Math.min(species.length, 5);
-    if (numOpts === 0) {
-      setQuestion({ url: null, species: null, correct: null });
-      return;
-    }
-    const options = getRandomCombination(species, numOpts);
-    const correctIdx = Math.floor(Math.random() * numOpts);
-
-    fetch(
-      `https://api.inaturalist.org/v1/observations?photo_license=cc-by-nc&taxon_id=${options[correctIdx].id}&quality_grade=research&order=desc&order_by=created_at&${getInaturalistLocaleQuery(locale)}`,
-    )
-      .then((r) => r.json())
-      .then((json) => {
-        const results: any[] = json.results ?? [];
-        const obs = results[Math.floor(Math.random() * results.length)];
-        setQuestion({
-          url: obs?.photos?.[0] ?? null,
-          species: options,
-          correct: correctIdx,
-        });
-      })
-      .catch(console.error);
-  }, [isCustomTest, customSpeciesIds, locale]);
-
-  /* Start when data arrives */
-  useEffect(() => {
-    if (data) generateQuestion();
-  }, [data, generateQuestion]);
-
-  const handleAnswer = (userResponse: number) => {
-    const isCorrect = question?.correct === userResponse;
-    setPoints((p) => p + (isCorrect ? 1 : 0));
-    setAnsweredQuestions((prev) => [
-      ...prev,
-      { question: question!, userResponse, isCorrect },
-    ]);
-    generateQuestion();
-  };
-
-  const restart = () => {
-    setPoints(0);
-    setAnsweredQuestions([]);
-    setQuestion(null);
-    setQuestionIndex(-1);
-    generateQuestion();
-  };
+  const {
+    taxonName,
+    question,
+    questionIndex,
+    numQuestions,
+    points,
+    answeredQuestions,
+    customSpeciesIds,
+    handleAnswer,
+    restart,
+  } = useTestGame('photo_license', extractMedia);
 
   if (questionIndex >= numQuestions) {
     return (
@@ -641,11 +415,12 @@ export default function Test() {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Styles
+// ---------------------------------------------------------------------------
+
 const styles = StyleSheet.create({
-  pageScroll: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
+  pageScroll: { flex: 1, backgroundColor: colors.bg },
   page: {
     flexGrow: 1,
     backgroundColor: colors.bg,
@@ -663,15 +438,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     ...cardShadow,
   },
-  emptyCard: {
-    maxWidth: 480,
-    padding: spacing.xxl,
-    alignItems: 'center',
-  },
-  emptyText: {
-    color: colors.muted,
-    fontStyle: 'italic',
-  },
+  emptyCard: { maxWidth: 480, padding: spacing.xxl, alignItems: 'center' },
+  emptyText: { color: colors.muted, fontStyle: 'italic' },
   cardHeader: {
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.xl,
@@ -689,30 +457,12 @@ const styles = StyleSheet.create({
     color: colors.text,
     flexShrink: 1,
   },
-  progress: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.muted,
-  },
-  cardBody: {
-    flexDirection: 'column',
-  },
-  cardBodyWide: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-  },
-  imageWrap: {
-    width: '100%',
-    backgroundColor: '#000',
-    position: 'relative',
-  },
-  imageWrapWide: {
-    width: '55%',
-  },
-  questionImage: {
-    width: '100%',
-    height: 340,
-  },
+  progress: { fontSize: 13, fontWeight: '600', color: colors.muted },
+  cardBody: { flexDirection: 'column' },
+  cardBodyWide: { flexDirection: 'row', alignItems: 'stretch' },
+  imageWrap: { width: '100%', backgroundColor: '#000', position: 'relative' },
+  imageWrapWide: { width: '55%' },
+  questionImage: { width: '100%', height: 340 },
   zoomHint: {
     position: 'absolute',
     bottom: spacing.sm,
@@ -733,11 +483,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
-  optionsWide: {
-    borderTopWidth: 0,
-    borderLeftWidth: 1,
-    borderLeftColor: colors.border,
-  },
+  optionsWide: { borderTopWidth: 0, borderLeftWidth: 1, borderLeftColor: colors.border },
   optionsLabel: {
     fontSize: 12,
     fontWeight: '600',
@@ -755,15 +501,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  optionBtnPressed: {
-    backgroundColor: colors.accentLight,
-    borderColor: colors.accent,
-  },
-  optionText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: colors.text,
-  },
+  optionBtnPressed: { backgroundColor: colors.accentLight, borderColor: colors.accent },
+  optionText: { fontSize: 14, fontWeight: '500', color: colors.text },
   attribution: {
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.xl,
@@ -780,15 +519,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing.lg,
   },
-  lightboxImage: {
-    width: '100%',
-    height: '90%',
-  },
-  resultsPage: {
-    backgroundColor: colors.bg,
-    padding: spacing.xl,
-    paddingVertical: 40,
-  },
+  lightboxImage: { width: '100%', height: '90%' },
+  resultsPage: { backgroundColor: colors.bg, padding: spacing.xl, paddingVertical: 40 },
   resultsWrap: {
     width: '100%',
     maxWidth: 860,
@@ -796,34 +528,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.xxl,
   },
-  resultsScore: {
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
+  resultsScore: { alignItems: 'center', gap: spacing.sm },
   resultsScoreTitle: {
     fontFamily: fonts.display,
     fontSize: 32,
     fontWeight: '700',
     color: colors.text,
   },
-  resultsStat: {
-    fontSize: 18,
-    color: colors.muted,
-  },
-  resultsNum: {
-    fontWeight: '700',
-    color: colors.accent,
-  },
+  resultsStat: { fontSize: 18, color: colors.muted },
+  resultsNum: { fontWeight: '700', color: colors.accent },
   resultsActions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.md,
     justifyContent: 'center',
   },
-  actionBtn: {
-    width: 'auto',
-    paddingHorizontal: spacing.xl,
-  },
+  actionBtn: { width: 'auto', paddingHorizontal: spacing.xl },
   resultsHeading: {
     fontFamily: fonts.display,
     fontSize: 20,
@@ -848,14 +568,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     ...cardShadow,
   },
-  resultsItemImgWrap: {
-    position: 'relative',
-    backgroundColor: '#000',
-  },
-  resultsItemImg: {
-    width: '100%',
-    height: 160,
-  },
+  resultsItemImgWrap: { position: 'relative', backgroundColor: '#000' },
+  resultsItemImg: { width: '100%', height: 160 },
   badge: {
     position: 'absolute',
     top: spacing.sm,
@@ -866,26 +580,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  badgeCorrect: {
-    backgroundColor: colors.correct,
-  },
-  badgeWrong: {
-    backgroundColor: colors.wrong,
-  },
-  badgeText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 14,
-  },
-  resultsItemBody: {
-    padding: spacing.md,
-    gap: spacing.xs,
-  },
-  resultsItemCorrect: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-  },
+  badgeCorrect: { backgroundColor: colors.correct },
+  badgeWrong: { backgroundColor: colors.wrong },
+  badgeText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  resultsItemBody: { padding: spacing.md, gap: spacing.xs },
+  resultsItemCorrect: { fontSize: 14, fontWeight: '600', color: colors.text },
   resultsItemWrongLabel: {
     fontSize: 11,
     textTransform: 'uppercase',
@@ -893,8 +592,5 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.muted,
   },
-  resultsItemWrong: {
-    fontSize: 13,
-    color: colors.wrong,
-  },
+  resultsItemWrong: { fontSize: 13, color: colors.wrong },
 });
