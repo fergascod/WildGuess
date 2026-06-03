@@ -88,7 +88,12 @@
         "locationLabel": "Zona geogràfica",
         "start": "Comença",
         "custom": "Fes un test personalitzat!",
-        "hint": "Aquí pots jugar a identificar espècies dels grups taxonòmics que més t'agradin. Selecciona el nombre d'espècies que vols incloure al test: quantes més n'escullis més difícil serà!"
+        "hint": "Aquí pots jugar a identificar espècies dels grups taxonòmics que més t'agradin. Selecciona el nombre d'espècies que vols incloure al test: quantes més n'escullis més difícil serà!",
+        "testTypeLabel": "Tipus de test",
+        "testType": {
+            "image": "Imatges",
+            "sound": "Sons"
+        }
     },
     "newTestTaxon": {
         "titlePrefix": "Nou joc:",

@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import LocationPicker, { type Location } from '@/components/LocationPicker';
 import { Button, Card, FormField, NumberInput, Screen, Title } from '@/components/ui';
@@ -13,9 +13,11 @@ import {
 } from '@/lib/utils';
 import { useLocale } from '@/hooks/use-locale';
 import { getInaturalistLocaleQuery } from '@/lib/locale';
-import { colors } from '@/theme/theme';
+import { colors, radius, spacing } from '@/theme/theme';
 
 const DEFAULT_LOCATION: Location = { lat: 41.3874, lng: 2.1686, radius: 40 };
+
+type TestType = 'image' | 'sound';
 
 function normalizeId(raw: string | string[] | undefined): string {
   const id = Array.isArray(raw) ? raw[0] : raw;
@@ -33,6 +35,7 @@ export default function NewTestForTaxon() {
   const [numQuestions, setNumQuestions] = useState<number | null>(null);
   const [numSpecies, setNumSpecies] = useState<number | null>(null);
   const [location, setLocation] = useState<Location>(DEFAULT_LOCATION);
+  const [testType, setTestType] = useState<TestType>('image');
 
   useEffect(() => {
     setTaxonName(null);
@@ -45,8 +48,9 @@ export default function NewTestForTaxon() {
   }, [mode, locale]);
 
   function start() {
+    const pathname = testType === 'sound' ? '/sound_test' : '/test';
     router.push({
-      pathname: '/test',
+      pathname,
       params: {
         taxon_id: mode,
         num_questions: String(numQuestions ?? ''),
@@ -92,6 +96,25 @@ export default function NewTestForTaxon() {
           />
         </FormField>
 
+        <FormField label={t('newTest.testTypeLabel')}>
+          <View style={styles.toggle}>
+            {(['image', 'sound'] as TestType[]).map((type) => (
+              <Pressable
+                key={type}
+                style={[styles.toggleBtn, testType === type && styles.toggleBtnActive]}
+                onPress={() => setTestType(type)}
+              >
+                <Text style={[styles.toggleIcon]}>
+                  {type === 'image' ? '🖼️' : '🔊'}
+                </Text>
+                <Text style={[styles.toggleLabel, testType === type && styles.toggleLabelActive]}>
+                  {t(`newTest.testType.${type}`)}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </FormField>
+
         <FormField label={t('newTest.locationLabel')}>
           <LocationPicker defaultRadius={40} onChange={setLocation} />
         </FormField>
@@ -121,5 +144,38 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     textAlign: 'center',
     color: colors.muted,
+  },
+  toggle: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  toggleBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bg,
+  },
+  toggleBtnActive: {
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
+  },
+  toggleIcon: {
+    fontSize: 16,
+  },
+  toggleLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.text,
+  },
+  toggleLabelActive: {
+    color: '#fff',
+    fontWeight: '600',
   },
 });

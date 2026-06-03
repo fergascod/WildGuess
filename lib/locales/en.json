@@ -88,7 +88,12 @@
         "locationLabel": "Geographic area",
         "start": "Start",
         "custom": "Make a custom test!",
-        "hint": "Here you can play to identify species from the taxonomic groups you like most. Select the number of species you want to include in the test: the more you choose, the harder it will be!"
+        "hint": "Here you can play to identify species from the taxonomic groups you like most. Select the number of species you want to include in the test: the more you choose, the harder it will be!",
+        "testTypeLabel": "Test type",
+        "testType": {
+            "image": "Images",
+            "sound": "Sounds"
+        }
     },
     "newTestTaxon": {
         "titlePrefix": "New game:",

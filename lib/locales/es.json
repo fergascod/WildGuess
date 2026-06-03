@@ -88,7 +88,12 @@
         "locationLabel": "Zona geográfica",
         "start": "Empezar",
         "custom": "Haz un test personalizado!",
-        "hint": "Aquí puedes jugar a identificar especies de los grupos taxonómicos que más te gusten. Selecciona el número de especies que quieres incluir en el test: cuantas más elijas, más difícil será!"
+        "hint": "Aquí puedes jugar a identificar especies de los grupos taxonómicos que más te gusten. Selecciona el número de especies que quieres incluir en el test: cuantas más elijas, más difícil será!",
+        "testTypeLabel": "Tipo de test",
+        "testType": {
+            "image": "Imágenes",
+            "sound": "Sonidos"
+        }
     },
     "newTestTaxon": {
         "titlePrefix": "Nuevo juego:",
