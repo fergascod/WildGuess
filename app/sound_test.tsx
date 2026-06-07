@@ -33,27 +33,21 @@ import {
 function AudioPlayer({ url }: { url: string }) {
     const { t } = useTranslation();
 
-    // useAudioPlayer manages its own lifecycle — no manual cleanup needed.
-    // We initialise it with the first URL; subsequent URL changes are handled
-    // via player.replace() in the effect below.
     const player = useAudioPlayer({ uri: url });
     const status = useAudioPlayerStatus(player);
 
-    // Keep silent-mode enabled once on mount
     useEffect(() => {
         setAudioModeAsync({ playsInSilentMode: true });
     }, []);
 
-    // Swap the source whenever the URL changes (new question)
     useEffect(() => {
         player.replace({ uri: url });
-    }, [url]);  // player identity is stable for the component lifetime
+    }, [url]);
 
     const togglePlay = () => {
         if (status.playing) {
             player.pause();
         } else {
-            // expo-audio doesn't auto-reset position after finishing — seek to start
             if (status.didJustFinish) {
                 player.seekTo(0);
             }
@@ -61,16 +55,28 @@ function AudioPlayer({ url }: { url: string }) {
         }
     };
 
-    const isPlaying = status.playing;
+    const duration = status.duration ?? 0;
+    const currentTime = status.currentTime ?? 0;
+    const progress =
+        duration > 0 ? Math.min(currentTime / duration, 1) : 0;
 
     return (
         <Pressable
-            style={({ pressed }) => [styles.playBtn, pressed && styles.playBtnPressed]}
+            style={({ pressed }) => [
+                styles.playBtn,
+                pressed && styles.playBtnPressed,
+            ]}
             onPress={togglePlay}
         >
-            <Text style={styles.playIcon}>{isPlaying ? '⏸' : '▶'}</Text>
-            <Text style={styles.playLabel}>
-                {isPlaying ? t('sound_test.pause') : t('sound_test.play')}
+            <View
+                style={[
+                    styles.playBtnProgress,
+                    { width: `${progress * 100}%` },
+                ]}
+            />
+
+            <Text style={styles.playIcon}>
+                {status.playing ? '⏸' : '▶'}
             </Text>
         </Pressable>
     );
@@ -327,17 +333,56 @@ const styles = StyleSheet.create({
         borderBottomColor: colors.border,
     },
     playBtn: {
-        flexDirection: 'row',
+        width: 220,
+        height: 56,
+        borderRadius: 999,
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.border,
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+        position: 'relative',
+        ...cardShadow,
+    },
+
+    playBtnProgress: {
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        bottom: 0,
+        backgroundColor: colors.accent + '33', // subtle fill
+    },
+
+    playBtnPressed: {
+        opacity: 0.9,
+    },
+
+    playIcon: {
+        fontSize: 24,
+        color: colors.accent,
+        fontWeight: '700',
+    },
+    playLabel: { fontSize: 16, fontWeight: '600', color: '#fff' },
+    audioPlayer: {
+        width: '100%',
         alignItems: 'center',
         gap: spacing.md,
-        paddingVertical: spacing.lg,
-        paddingHorizontal: spacing.xxl,
-        backgroundColor: colors.accent,
-        borderRadius: radius.pill,
     },
-    playBtnPressed: { opacity: 0.75 },
-    playIcon: { fontSize: 22, color: '#fff' },
-    playLabel: { fontSize: 16, fontWeight: '600', color: '#fff' },
+
+    progressBar: {
+        width: '100%',
+        maxWidth: 320,
+        height: 6,
+        backgroundColor: colors.border,
+        borderRadius: 999,
+        overflow: 'hidden',
+    },
+
+    progressFill: {
+        height: '100%',
+        backgroundColor: colors.accent,
+    },
     options: {
         flex: 1,
         justifyContent: 'center',
